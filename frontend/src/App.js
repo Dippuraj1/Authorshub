@@ -378,6 +378,7 @@ function App() {
     formData.append('book_size', bookSize);
     formData.append('font', font);
     formData.append('genre', genre);
+    formData.append('template', template);
     
     try {
       const response = await fetch(`${BACKEND_URL}/api/upload`, {
