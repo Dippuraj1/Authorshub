@@ -30,7 +30,12 @@ class BookFormatAITester:
             elif method == 'GET':
                 response = requests.get(url, headers=headers)
             elif method == 'POST':
-                response = requests.post(url, json=data, headers=headers)
+                if endpoint == 'token':
+                    # For token endpoint, use form data
+                    headers['Content-Type'] = 'application/x-www-form-urlencoded'
+                    response = requests.post(url, data=data, headers=headers)
+                else:
+                    response = requests.post(url, json=data, headers=headers)
             elif method == 'PUT':
                 response = requests.put(url, json=data, headers=headers)
 
