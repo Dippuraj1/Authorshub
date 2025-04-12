@@ -78,10 +78,8 @@ class TestBookFormatter:
     def test_login(self):
         """Test login and get token"""
         # Login uses form data
-        form_data = {
-            "username": self.user_email,
-            "password": self.password
-        }
+        form_data = f"username={self.user_email}&password={self.password}"
+        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
         success, response = self.run_test(
             "Login",
             "POST",
