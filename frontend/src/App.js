@@ -1089,6 +1089,12 @@ function App() {
             {isLoggedIn ? (
               <>
                 <button 
+                  className={`nav-link ${currentTab === 'upload' && !window.location.hash ? 'active' : ''}`}
+                  onClick={() => setCurrentTab('upload')}
+                >
+                  Home
+                </button>
+                <button 
                   className={`nav-link ${currentTab === 'upload' ? 'active' : ''}`}
                   onClick={() => setCurrentTab('upload')}
                 >
@@ -1121,15 +1127,29 @@ function App() {
               </>
             ) : (
               <>
+                <button 
+                  className="nav-link"
+                  onClick={() => {
+                    window.scrollTo(0, 0);
+                  }}
+                >
+                  Home
+                </button>
                 <button
                   className="nav-link"
-                  onClick={() => setIsRegistering(false)}
+                  onClick={() => {
+                    setIsRegistering(false);
+                    setIsForgotPassword(false);
+                  }}
                 >
                   Log In
                 </button>
                 <button
                   className="signup-button"
-                  onClick={() => setIsRegistering(true)}
+                  onClick={() => {
+                    setIsRegistering(true);
+                    setIsForgotPassword(false);
+                  }}
                 >
                   Sign Up Free
                 </button>
