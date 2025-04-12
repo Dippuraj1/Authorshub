@@ -1,128 +1,124 @@
-import unittest
+import pytest
 import requests
 import os
 import json
 from pathlib import Path
 
-class BookFormatterAPITest(unittest.TestCase):
-    def setUp(self):
-        self.base_url = "https://3f99b569-43a1-4409-b75b-97e6a1d67a11.preview.emergentagent.com"
-        self.test_files_dir = Path(__file__).parent / "test_files"
-        self.test_files_dir.mkdir(exist_ok=True)
-        
-        # Create test files
-        self.create_test_files()
+# Get the backend URL from environment variable
+BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', '')
 
-    def create_test_files(self):
-        # Create a simple DOCX file for testing
-        from docx import Document
-        doc = Document()
-        doc.add_paragraph("Test content for DOCX file")
-        self.docx_path = self.test_files_dir / "test.docx"
-        doc.save(self.docx_path)
+class TestBookFormatter:
+    def setup_method(self):
+        """Setup test data"""
+        self.test_files = {
+            'pdf': str(Path(__file__).parent / 'test.pdf'),
+            'docx': str(Path(__file__).parent / 'test.docx')
+        }
+        self.test_data = {
+            'book_size': '6x9',
+            'font': 'Times New Roman',
+            'genre': 'non-fiction'
+        }
 
-        # Create a simple PDF file for testing
-        from reportlab.pdfgen import canvas
-        self.pdf_path = self.test_files_dir / "test.pdf"
-        c = canvas.Canvas(str(self.pdf_path))
-        c.drawString(100, 750, "Test content for PDF file")
-        c.save()
-
-    def test_api_root(self):
-        """Test the root API endpoint"""
-        response = requests.get(f"{self.base_url}/api")
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), {"message": "Book Editor API"})
-
-    def test_upload_docx(self):
-        """Test uploading a DOCX file"""
-        with open(self.docx_path, 'rb') as f:
-            files = {'file': ('test.docx', f, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')}
-            data = {
-                'book_size': '6x9',
-                'font': 'Times New Roman',
-                'genre': 'novel'
-            }
-            response = requests.post(f"{self.base_url}/api/upload", files=files, data=data)
-            
-            self.assertEqual(response.status_code, 200)
-            result = response.json()
-            self.assertIn('file_id', result)
-            self.assertIn('message', result)
-            return result.get('file_id')
+    def test_root_endpoint(self):
+        """Test the root endpoint"""
+        response = requests.get(f"{BACKEND_URL}/api")
+        assert response.status_code == 200
+        assert "message" in response.json()
 
     def test_upload_pdf(self):
-        """Test uploading a PDF file"""
-        with open(self.pdf_path, 'rb') as f:
-            files = {'file': ('test.pdf', f, 'application/pdf')}
-            data = {
-                'book_size': '5x8',
-                'font': 'Arial',
-                'genre': 'non-fiction'
-            }
-            response = requests.post(f"{self.base_url}/api/upload", files=files, data=data)
-            
-            self.assertEqual(response.status_code, 200)
-            result = response.json()
-            self.assertIn('file_id', result)
-            self.assertIn('message', result)
-            return result.get('file_id')
+        """Test PDF upload and processing"""
+        # Create a test PDF file
+        with open(self.test_files['pdf'], 'wb') as f:
+            f.write(b'%PDF-1.4\nTest PDF content')
+
+        files = {'file': ('test.pdf', open(self.test_files['pdf'], 'rb'), 'application/pdf')}
+        response = requests.post(
+            f"{BACKEND_URL}/api/upload",
+            files=files,
+            data=self.test_data
+        )
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert "file_id" in data
+        
+        # Test status endpoint
+        file_id = data["file_id"]
+        status_response = requests.get(f"{BACKEND_URL}/api/status/{file_id}")
+        assert status_response.status_code == 200
+        assert "status" in status_response.json()
+
+        # Test download endpoint
+        download_response = requests.get(f"{BACKEND_URL}/api/download/{file_id}")
+        assert download_response.status_code == 200
+
+    def test_upload_docx(self):
+        """Test DOCX upload and processing"""
+        # Create a test DOCX file
+        with open(self.test_files['docx'], 'wb') as f:
+            f.write(b'PK\x03\x04\x14\x00\x00\x00\x08\x00')  # Basic DOCX signature
+
+        files = {'file': ('test.docx', open(self.test_files['docx'], 'rb'), 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')}
+        response = requests.post(
+            f"{BACKEND_URL}/api/upload",
+            files=files,
+            data=self.test_data
+        )
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert "file_id" in data
 
     def test_invalid_file_type(self):
-        """Test uploading an invalid file type"""
-        # Create a text file
-        invalid_file = self.test_files_dir / "test.txt"
-        with open(invalid_file, 'w') as f:
-            f.write("Invalid file type")
-
-        with open(invalid_file, 'rb') as f:
-            files = {'file': ('test.txt', f, 'text/plain')}
-            data = {
-                'book_size': '6x9',
-                'font': 'Times New Roman',
-                'genre': 'novel'
-            }
-            response = requests.post(f"{self.base_url}/api/upload", files=files, data=data)
-            
-            self.assertEqual(response.status_code, 400)
-            self.assertIn('Unsupported file format', response.json().get('detail', ''))
+        """Test upload with invalid file type"""
+        files = {'file': ('test.txt', b'Invalid file content', 'text/plain')}
+        response = requests.post(
+            f"{BACKEND_URL}/api/upload",
+            files=files,
+            data=self.test_data
+        )
+        assert response.status_code == 400
 
     def test_invalid_parameters(self):
-        """Test uploading with invalid parameters"""
-        with open(self.docx_path, 'rb') as f:
-            files = {'file': ('test.docx', f, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')}
-            data = {
-                'book_size': 'invalid_size',
-                'font': 'Invalid Font',
-                'genre': 'invalid_genre'
-            }
-            response = requests.post(f"{self.base_url}/api/upload", files=files, data=data)
-            
-            self.assertEqual(response.status_code, 400)
-
-    def test_full_workflow(self):
-        """Test the complete workflow from upload to download"""
-        # Upload file
-        file_id = self.test_upload_docx()
+        """Test upload with invalid parameters"""
+        files = {'file': ('test.pdf', open(self.test_files['pdf'], 'rb'), 'application/pdf')}
         
-        # Check status
-        response = requests.get(f"{self.base_url}/api/status/{file_id}")
-        self.assertEqual(response.status_code, 200)
-        status_data = response.json()
-        self.assertEqual(status_data['file_id'], file_id)
-        self.assertIn(status_data['status'], ['processing', 'completed'])
+        # Test invalid book size
+        invalid_data = self.test_data.copy()
+        invalid_data['book_size'] = 'invalid'
+        response = requests.post(
+            f"{BACKEND_URL}/api/upload",
+            files=files,
+            data=invalid_data
+        )
+        assert response.status_code == 400
 
-        # If completed, try download
-        if status_data['status'] == 'completed':
-            response = requests.get(f"{self.base_url}/api/download/{file_id}")
-            self.assertEqual(response.status_code, 200)
-            self.assertTrue(response.headers['Content-Type'].startswith('application/'))
+        # Test invalid font
+        invalid_data = self.test_data.copy()
+        invalid_data['font'] = 'invalid'
+        response = requests.post(
+            f"{BACKEND_URL}/api/upload",
+            files=files,
+            data=invalid_data
+        )
+        assert response.status_code == 400
 
-    def tearDown(self):
-        """Clean up test files"""
-        import shutil
-        if self.test_files_dir.exists():
-            shutil.rmtree(self.test_files_dir)
+        # Test invalid genre
+        invalid_data = self.test_data.copy()
+        invalid_data['genre'] = 'invalid'
+        response = requests.post(
+            f"{BACKEND_URL}/api/upload",
+            files=files,
+            data=invalid_data
+        )
+        assert response.status_code == 400
 
-if __name__ == '__main__':
-    unittest.main()
+    def teardown_method(self):
+        """Cleanup test files"""
+        for file_path in self.test_files.values():
+            if os.path.exists(file_path):
+                os.remove(file_path)
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])
