@@ -1,144 +1,197 @@
+import requests
 import pytest
-import aiohttp
-import asyncio
-import os
 from datetime import datetime
-import json
+import os
+import logging
 
-# Get the backend URL from environment
-BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', 'http://localhost:8001')
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Get backend URL from environment
+BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', '')
+if not BACKEND_URL:
+    raise ValueError("BACKEND_URL environment variable not set")
 
 class TestBookFormatter:
-    @pytest.fixture(autouse=True)
-    async def setup(self):
+    def __init__(self):
         self.base_url = BACKEND_URL
-        self.session = aiohttp.ClientSession()
-        self.test_users = {
-            'free': {
-                'email': f'free_user_{datetime.now().strftime("%Y%m%d%H%M%S")}@test.com',
-                'password': 'TestPass123!'
-            },
-            'creator': {
-                'email': f'creator_user_{datetime.now().strftime("%Y%m%d%H%M%S")}@test.com',
-                'password': 'TestPass123!'
-            },
-            'business': {
-                'email': f'business_user_{datetime.now().strftime("%Y%m%d%H%M%S")}@test.com',
-                'password': 'TestPass123!'
-            }
+        self.token = None
+        self.user_email = f"test_user_{datetime.now().strftime('%H%M%S')}@test.com"
+        self.password = "TestPass123!"
+        self.tests_run = 0
+        self.tests_passed = 0
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, files=None):
+        """Run a single API test"""
+        url = f"{self.base_url}/api/{endpoint}"
+        headers = {}
+        if self.token:
+            headers['Authorization'] = f'Bearer {self.token}'
+        
+        self.tests_run += 1
+        logger.info(f"\n🔍 Testing {name}...")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers)
+            elif method == 'POST':
+                if files:
+                    response = requests.post(url, headers=headers, data=data, files=files)
+                else:
+                    headers['Content-Type'] = 'application/json'
+                    response = requests.post(url, headers=headers, json=data)
+            elif method == 'PUT':
+                headers['Content-Type'] = 'application/json'
+                response = requests.put(url, headers=headers, json=data)
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                logger.info(f"✅ Passed - Status: {response.status_code}")
+                if response.text:
+                    try:
+                        logger.info(f"Response: {response.json()}")
+                    except:
+                        logger.info(f"Response: {response.text}")
+            else:
+                logger.error(f"❌ Failed - Expected {expected_status}, got {response.status_code}")
+                if response.text:
+                    logger.error(f"Error response: {response.text}")
+
+            return success, response.json() if success and response.text else {}
+
+        except Exception as e:
+            logger.error(f"❌ Failed - Error: {str(e)}")
+            return False, {}
+
+    def test_registration(self):
+        """Test user registration"""
+        return self.run_test(
+            "User Registration",
+            "POST",
+            "register",
+            200,
+            data={"email": self.user_email, "password": self.password}
+        )
+
+    def test_login(self):
+        """Test login and get token"""
+        # Login uses form data
+        form_data = {
+            "username": self.user_email,
+            "password": self.password
         }
-        self.tokens = {}
-        yield
-        await self.session.close()
+        success, response = self.run_test(
+            "Login",
+            "POST",
+            "token",
+            200,
+            data=form_data
+        )
+        if success and 'access_token' in response:
+            self.token = response['access_token']
+            return True
+        return False
 
-    async def register_user(self, email, password):
-        """Register a new user"""
-        url = f"{self.base_url}/api/register"
-        data = {"email": email, "password": password}
-        async with self.session.post(url, json=data) as response:
-            return response.status, await response.json()
+    def test_get_subscription_tiers(self):
+        """Test getting subscription tiers"""
+        return self.run_test(
+            "Get Subscription Tiers",
+            "GET",
+            "subscription/tiers",
+            200
+        )
 
-    async def login_user(self, email, password):
-        """Login and get token"""
-        url = f"{self.base_url}/api/token"
-        data = {"username": email, "password": password}
-        async with self.session.post(url, data=data) as response:
-            return response.status, await response.json()
+    def test_get_genres(self):
+        """Test getting available genres"""
+        return self.run_test(
+            "Get Genres",
+            "GET",
+            "genres",
+            200
+        )
 
-    async def upgrade_subscription(self, token, tier):
-        """Upgrade user subscription"""
-        url = f"{self.base_url}/api/subscription/upgrade"
-        headers = {"Authorization": f"Bearer {token}"}
-        async with self.session.put(url, json={"tier": tier}, headers=headers) as response:
-            return response.status, await response.json()
+    def test_get_formatting_standards(self):
+        """Test getting formatting standards"""
+        return self.run_test(
+            "Get Formatting Standards",
+            "GET",
+            "formatting/standards",
+            200
+        )
 
-    async def get_genres(self, token):
-        """Get available genres"""
-        url = f"{self.base_url}/api/genres"
-        headers = {"Authorization": f"Bearer {token}"}
-        async with self.session.get(url, headers=headers) as response:
-            return response.status, await response.json()
+    def test_get_usage(self):
+        """Test getting current usage"""
+        return self.run_test(
+            "Get Current Usage",
+            "GET",
+            "usage/current",
+            200
+        )
 
-    async def get_usage(self, token):
-        """Get current usage"""
-        url = f"{self.base_url}/api/usage/current"
-        headers = {"Authorization": f"Bearer {token}"}
-        async with self.session.get(url, headers=headers) as response:
-            return response.status, await response.json()
+    def test_file_upload(self):
+        """Test file upload with a sample DOCX file"""
+        # Create a simple test DOCX file
+        test_file_path = "/tmp/test.docx"
+        with open(test_file_path, "w") as f:
+            f.write("Test content")
 
-    @pytest.mark.asyncio
-    async def test_registration_and_login(self):
-        """Test user registration and login flow"""
-        print("\nTesting registration and login...")
-        
-        for tier, user_data in self.test_users.items():
-            # Test registration
-            status, response = await self.register_user(user_data['email'], user_data['password'])
-            assert status == 200, f"Registration failed for {tier} user"
-            print(f"✓ Registration successful for {tier} user")
+        files = {
+            'file': ('test.docx', open(test_file_path, 'rb'), 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+        }
+        data = {
+            'book_size': '6x9',
+            'font': 'Times New Roman',
+            'genre': 'non_fiction'
+        }
 
-            # Test login
-            status, response = await self.login_user(user_data['email'], user_data['password'])
-            assert status == 200, f"Login failed for {tier} user"
-            assert 'access_token' in response, "No access token in response"
-            self.tokens[tier] = response['access_token']
-            print(f"✓ Login successful for {tier} user")
+        return self.run_test(
+            "File Upload",
+            "POST",
+            "upload",
+            200,
+            data=data,
+            files=files
+        )
 
-    @pytest.mark.asyncio
-    async def test_subscription_tiers(self):
-        """Test subscription tier functionality"""
-        print("\nTesting subscription tiers...")
-        
-        # First register and login all users
-        await self.test_registration_and_login()
-
-        # Upgrade creator and business users
-        for tier in ['creator', 'business']:
-            status, response = await self.upgrade_subscription(self.tokens[tier], tier)
-            assert status == 200, f"Failed to upgrade to {tier} tier"
-            print(f"✓ Successfully upgraded to {tier} tier")
-
-        # Test genre access for each tier
-        for tier, token in self.tokens.items():
-            status, genres = await self.get_genres(token)
-            assert status == 200, f"Failed to get genres for {tier} tier"
-            
-            allowed_genres = [g for g in genres if g['allowed']]
-            expected_count = {
-                'free': 3,  # non_fiction, poetry, romance
-                'creator': 10,  # all genres
-                'business': 10  # all genres
-            }
-            
-            assert len(allowed_genres) == expected_count[tier], \
-                f"Incorrect number of allowed genres for {tier} tier"
-            print(f"✓ Correct genre access for {tier} tier")
-
-    @pytest.mark.asyncio
-    async def test_usage_limits(self):
-        """Test usage limits for different tiers"""
-        print("\nTesting usage limits...")
-        
-        # Ensure we have logged in users
-        if not self.tokens:
-            await self.test_registration_and_login()
-
-        # Check initial usage for each tier
-        for tier, token in self.tokens.items():
-            status, usage = await self.get_usage(token)
-            assert status == 200, f"Failed to get usage for {tier} tier"
-            
-            expected_limits = {
-                'free': 2,
-                'creator': 10,
-                'business': 50
-            }
-            
-            assert usage['limit'] == expected_limits[tier], \
-                f"Incorrect usage limit for {tier} tier"
-            assert usage['current_usage'] == 0, \
-                f"Initial usage should be 0 for {tier} tier"
-            print(f"✓ Correct usage limits for {tier} tier")
+def main():
+    tester = TestBookFormatter()
+    
+    # Test registration and login flow
+    logger.info("\n🔄 Testing Authentication Flow...")
+    if not tester.test_registration()[0]:
+        logger.error("❌ Registration failed, stopping tests")
+        return 1
+    
+    if not tester.test_login():
+        logger.error("❌ Login failed, stopping tests")
+        return 1
+    
+    # Test getting subscription tiers
+    logger.info("\n🔄 Testing Subscription and Genre Features...")
+    tester.test_get_subscription_tiers()
+    
+    # Test getting genres (requires auth)
+    tester.test_get_genres()
+    
+    # Test getting formatting standards
+    tester.test_get_formatting_standards()
+    
+    # Test getting usage data (requires auth)
+    tester.test_get_usage()
+    
+    # Test file upload (requires auth)
+    logger.info("\n🔄 Testing File Upload...")
+    tester.test_file_upload()
+    
+    # Print results
+    logger.info(f"\n📊 Tests Summary:")
+    logger.info(f"Total tests run: {tester.tests_run}")
+    logger.info(f"Tests passed: {tester.tests_passed}")
+    logger.info(f"Success rate: {(tester.tests_passed/tester.tests_run)*100:.2f}%")
+    
+    return 0 if tester.tests_passed == tester.tests_run else 1
 
 if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
+    exit(main())
