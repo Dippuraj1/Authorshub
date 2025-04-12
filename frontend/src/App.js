@@ -1077,7 +1077,12 @@ function App() {
       <header className="app-header">
         <div className="header-content">
           <div className="logo">
-            <h1>BookFormat<span>AI</span></h1>
+            <h1 onClick={() => {
+              setCurrentTab('upload');
+              if (!isLoggedIn) {
+                window.scrollTo(0, 0);
+              }
+            }} style={{ cursor: 'pointer' }}>BookFormat<span>AI</span></h1>
           </div>
           
           <nav className="main-nav">
