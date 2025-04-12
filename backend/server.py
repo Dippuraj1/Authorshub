@@ -150,54 +150,51 @@ async def upload_file(
 
 async def process_docx(input_path, file_id, book_size, font, genre):
     """Process a DOCX file and apply formatting according to specified parameters"""
-    # Load the document
-    doc = docx.Document(input_path)
-    
-    # Apply formatting based on genre
-    # Get book size dimensions
-    width, height = BOOK_SIZES[book_size]
-    
-    # Set margins (1 inch for non-fiction as specified)
-    for section in doc.sections:
-        section.page_width = Inches(width)
-        section.page_height = Inches(height)
-        section.left_margin = Inches(1)
-        section.right_margin = Inches(1)
-        section.top_margin = Inches(1)
-        section.bottom_margin = Inches(1)
-    
-    # Apply font and other formatting
-    for paragraph in doc.paragraphs:
-        if not paragraph.text.strip():
-            continue  # Skip empty paragraphs
+    try:
+        # Load the document
+        doc = docx.Document(input_path)
         
-        for run in paragraph.runs:
-            run.font.name = font
+        # Apply formatting based on genre
+        # Get book size dimensions
+        width, height = BOOK_SIZES[book_size]
+        
+        # Set margins (1 inch for non-fiction as specified)
+        for section in doc.sections:
+            section.page_width = Inches(width)
+            section.page_height = Inches(height)
+            section.left_margin = Inches(1)
+            section.right_margin = Inches(1)
+            section.top_margin = Inches(1)
+            section.bottom_margin = Inches(1)
+        
+        # Apply font and other formatting
+        for paragraph in doc.paragraphs:
+            if not paragraph.text.strip():
+                continue  # Skip empty paragraphs
             
-            # Apply genre-specific formatting
+            # Set paragraph formatting based on genre
             if genre == "non-fiction":
-                run.font.size = Pt(12)  # 12pt font for non-fiction
-                # Line spacing of 1.2 for non-fiction
                 paragraph.paragraph_format.line_spacing = 1.2
             elif genre == "novel":
-                run.font.size = Pt(12)  # 12pt font for novels
-                # Line spacing of 1.3 for novels
                 paragraph.paragraph_format.line_spacing = 1.3
-            elif genre == "poetry":
-                run.font.size = Pt(12)
-                # Poetry might have specific alignment needs
-                # Preserve original formatting for poetry
-    
-    # Save the formatted document
-    output_path = TEMP_DIR / f"{file_id}_formatted.docx"
-    doc.save(output_path)
-    
-    # Convert to PDF for preview and download
-    pdf_path = TEMP_DIR / f"{file_id}_formatted.pdf"
-    # This would require a conversion library - in a real app
-    # For now, we'll just use the DOCX as the output
-    
-    return output_path
+            
+            # Apply font to runs
+            for run in paragraph.runs:
+                run.font.name = font
+                run.font.size = Pt(12)  # 12pt font as per specs
+        
+        # Save the formatted document
+        output_path = TEMP_DIR / f"{file_id}_formatted.docx"
+        doc.save(output_path)
+        
+        # For now, we'll just use the DOCX as the output
+        # In a full version, we would convert to PDF here
+        logger.info(f"Successfully processed DOCX file: {output_path}")
+        
+        return output_path
+    except Exception as e:
+        logger.error(f"Error processing DOCX file: {str(e)}")
+        raise ValueError(f"Error processing DOCX file: {str(e)}")
 
 async def process_pdf(input_path, file_id, book_size, font, genre):
     """Process a PDF file and apply formatting according to specified parameters"""
