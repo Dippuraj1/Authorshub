@@ -878,13 +878,28 @@ function App() {
               
               <div className="subscription-action">
                 {tier.id !== userTier ? (
-                  <button
-                    className="upgrade-button"
-                    onClick={() => handleUpgrade(tier.id)}
-                    disabled={loading || tier.id === userTier}
-                  >
-                    {loading ? 'Processing...' : tier.price === 0 ? 'Downgrade' : 'Upgrade'}
-                  </button>
+                  <>
+                    {tier.price > 0 ? (
+                      <button
+                        className="purchase-button"
+                        onClick={() => {
+                          alert("Payment integration will be added once you provide the API keys for Razorpay/Stripe.");
+                          // This will be replaced with actual payment integration code
+                        }}
+                        disabled={loading}
+                      >
+                        Purchase Now
+                      </button>
+                    ) : (
+                      <button
+                        className="upgrade-button"
+                        onClick={() => handleUpgrade(tier.id)}
+                        disabled={loading}
+                      >
+                        Downgrade to Free
+                      </button>
+                    )}
+                  </>
                 ) : (
                   <button className="current-plan-button" disabled>
                     Current Plan
