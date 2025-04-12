@@ -191,6 +191,111 @@ function App() {
     }
   };
   
+  // Handle Google login
+  const handleGoogleLogin = async () => {
+    // In a real implementation, we would use the Google JavaScript SDK
+    // For now, we'll simulate a successful Google authentication
+    setLoading(true);
+    setError(null);
+    
+    try {
+      // Simulate Google login with a dummy token
+      const response = await fetch(`${BACKEND_URL}/api/google-auth`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ id_token: 'simulate_valid_token' })
+      });
+      
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.detail || 'Google login failed');
+      }
+      
+      const data = await response.json();
+      setToken(data.access_token);
+      setUserTier(data.user_tier);
+      setIsLoggedIn(true);
+      
+      // Store token in localStorage
+      localStorage.setItem('token', data.access_token);
+      localStorage.setItem('userTier', data.user_tier);
+      
+      // Fetch user data
+      fetchUserData(data.access_token);
+    } catch (err) {
+      setError(err.message || 'Google login failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Handle forgot password request
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/forgot-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email })
+      });
+      
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.detail || 'Password reset request failed');
+      }
+      
+      setSuccess('If your email is registered, you will receive a password reset link.');
+      // For demo purposes, we would show the reset token form
+      // In a real app, the user would click a link in their email
+      setResetToken(''); // Clear any previous token
+      
+    } catch (err) {
+      setError(err.message || 'Password reset request failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Handle password reset
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/reset-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          token: resetToken,
+          new_password: newPassword
+        })
+      });
+      
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.detail || 'Password reset failed');
+      }
+      
+      setSuccess('Password has been reset successfully. Please log in with your new password.');
+      setIsForgotPassword(false);
+      
+    } catch (err) {
+      setError(err.message || 'Password reset failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
   // Handle logout
   const handleLogout = () => {
     setToken('');
