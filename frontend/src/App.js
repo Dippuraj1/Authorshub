@@ -1076,6 +1076,63 @@ function App() {
     );
   };
   
+  // Render Payment Page
+  const renderPaymentPage = () => {
+    return (
+      <div className="payment-container">
+        <div className="payment-card">
+          <h2>Complete Your Subscription</h2>
+          <p>You're subscribing to our <strong>{pendingSubscription.charAt(0).toUpperCase() + pendingSubscription.slice(1)}</strong> plan.</p>
+          
+          <div className="payment-details">
+            <div className="payment-summary">
+              <h3>Subscription Summary</h3>
+              <div className="payment-item">
+                <span>Plan:</span>
+                <span>{pendingSubscription === 'creator' ? 'Creator' : 'Business'}</span>
+              </div>
+              <div className="payment-item">
+                <span>Price:</span>
+                <span>${pendingSubscription === 'creator' ? '5' : '25'}/month</span>
+              </div>
+              <div className="payment-item">
+                <span>Books per month:</span>
+                <span>{pendingSubscription === 'creator' ? '10' : '50'}</span>
+              </div>
+              <div className="payment-total">
+                <span>Total today:</span>
+                <span>${pendingSubscription === 'creator' ? '5' : '25'}</span>
+              </div>
+            </div>
+            
+            <div className="payment-form">
+              <p className="payment-note">For demo purposes, no payment information is required.</p>
+              <button
+                className="payment-button"
+                onClick={() => {
+                  handleUpgrade(pendingSubscription);
+                  setShowPaymentPage(false);
+                  setPendingSubscription(null);
+                }}
+              >
+                Complete Subscription ($0 for Demo)
+              </button>
+              <button
+                className="cancel-button"
+                onClick={() => {
+                  setShowPaymentPage(false);
+                  setPendingSubscription(null);
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // Main App Render
   return (
     <div className="app-container">
@@ -1165,7 +1222,9 @@ function App() {
       </header>
       
       <main className="app-main">
-        {!isLoggedIn ? (
+        {showPaymentPage ? (
+          renderPaymentPage()
+        ) : !isLoggedIn ? (
           isRegistering || isForgotPassword ? renderAuthPage() : renderLandingPage()
         ) : (
           <div className="dashboard-container">
