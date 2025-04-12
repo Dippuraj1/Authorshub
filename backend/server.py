@@ -838,7 +838,7 @@ async def process_docx(input_path, file_id, book_size, font, genre, template="st
             # If even this fails, raise the original error
             raise ValueError(f"Error processing DOCX file: {str(e)}")
 
-async def process_pdf(input_path, file_id, book_size, font, genre):
+async def process_pdf(input_path, file_id, book_size, font, genre, template="standard"):
     """Process a PDF file and apply formatting according to specified parameters"""
     try:
         # This is a simplified implementation - a full version would extract content 
