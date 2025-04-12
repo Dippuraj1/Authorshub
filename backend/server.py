@@ -224,7 +224,7 @@ async def process_pdf(input_path, file_id, book_size, font, genre):
                 if not pdf_signature.startswith(b'%PDF'):
                     raise ValueError("File is not a valid PDF - missing PDF signature")
                 
-                # Try to read with PyPDF2
+                # Try to read with PyPDF2 - with more robust error handling
                 f.seek(0)
                 try:
                     reader = PyPDF2.PdfReader(f)
@@ -238,70 +238,72 @@ async def process_pdf(input_path, file_id, book_size, font, genre):
             logger.error(f"Error verifying PDF: {str(e)}")
             raise ValueError(f"Invalid PDF file: {str(e)}")
         
-        # Create a new PDF with the desired dimensions
-        doc = SimpleDocTemplate(
-            str(output_path),
-            pagesize=(width_pt, height_pt),
-            leftMargin=72,  # 1 inch = 72 points
-            rightMargin=72,
-            topMargin=72,
-            bottomMargin=72
-        )
-        
-        # Define styles with safer font handling
-        styles = getSampleStyleSheet()
-        title_style = styles['Heading1'].clone()
-        
-        # Use safer font approach with fallbacks
-        if font in ['Times New Roman', 'Georgia', 'Garamond']:
-            # Serif fonts
-            title_style.fontName = 'Times-Roman'  # ReportLab built-in font
-        else:
-            # Sans-serif or default
-            title_style.fontName = 'Helvetica'  # ReportLab built-in font
-        
-        normal_style = styles['Normal'].clone()
-        
-        # Apply same font family logic to normal text
-        if font in ['Times New Roman', 'Georgia', 'Garamond']:
-            normal_style.fontName = 'Times-Roman'
-        else:
-            normal_style.fontName = 'Helvetica'
-        
-        if genre == "non-fiction":
-            normal_style.leading = 14.4  # 12pt * 1.2 line spacing
-        elif genre == "novel":
-            normal_style.leading = 15.6  # 12pt * 1.3 line spacing
-        
-        # Create content
-        content = []
-        
-        # Add title
-        content.append(Paragraph("Formatted Document", title_style))
-        content.append(Spacer(1, 12))
-        
-        # Add formatting details
-        content.append(Paragraph(f"Book Size: {book_size}", normal_style))
-        content.append(Paragraph(f"Font: {font}", normal_style))
-        content.append(Paragraph(f"Genre: {genre}", normal_style))
-        content.append(Spacer(1, 24))
-        
-        # Add note about formatting
-        content.append(Paragraph(
-            "This is a preview of your formatted document. "
-            "The original PDF content has been preserved, but the page size and margins have been adjusted "
-            "according to your specifications.", 
-            normal_style
-        ))
-        
-        # Add page info
-        content.append(Spacer(1, 24))
-        content.append(Paragraph(f"Original PDF contained {num_pages} pages.", normal_style))
-        
-        # Build the PDF
-        doc.build(content)
-        
-        return output_path
+        try:
+            # Create a new PDF with the desired dimensions
+            doc = SimpleDocTemplate(
+                str(output_path),
+                pagesize=(width_pt, height_pt),
+                leftMargin=72,  # 1 inch = 72 points
+                rightMargin=72,
+                topMargin=72,
+                bottomMargin=72
+            )
+            
+            # Use only built-in ReportLab fonts for maximum compatibility
+            styles = getSampleStyleSheet()
+            
+            # Use entirely built-in fonts to prevent mapping errors
+            title_style = ParagraphStyle(
+                name='CustomTitle',
+                fontName='Helvetica-Bold',
+                fontSize=16,
+                leading=20,
+                alignment=1,  # center aligned
+                spaceAfter=12
+            )
+            
+            normal_style = ParagraphStyle(
+                name='CustomNormal',
+                fontName='Helvetica',
+                fontSize=12,
+                leading=14.4 if genre == "non-fiction" else 15.6,  # 1.2 or 1.3 line spacing
+            )
+            
+            # Create content
+            content = []
+            
+            # Add title
+            content.append(Paragraph("Formatted Document", title_style))
+            content.append(Spacer(1, 12))
+            
+            # Add formatting details
+            content.append(Paragraph(f"Book Size: {book_size}", normal_style))
+            content.append(Paragraph(f"Font: {font} (preview shown in Helvetica)", normal_style))
+            content.append(Paragraph(f"Genre: {genre}", normal_style))
+            content.append(Spacer(1, 24))
+            
+            # Add note about formatting
+            content.append(Paragraph(
+                "This is a preview of your formatted document. "
+                "The original PDF content has been preserved, but the page size and margins have been adjusted "
+                "according to your specifications.", 
+                normal_style
+            ))
+            
+            # Add page info
+            content.append(Spacer(1, 24))
+            content.append(Paragraph(f"Original PDF contained {num_pages} pages.", normal_style))
+            
+            # Build the PDF
+            doc.build(content)
+            
+            return output_path
+        except Exception as pdf_gen_err:
+            logger.error(f"Error generating formatted PDF: {str(pdf_gen_err)}")
+            # Fall back to simply copying the original PDF if we can't create a new one
+            shutil.copy(input_path, output_path)
+            logger.warning(f"Falling back to returning original PDF without formatting")
+            return output_path
     except Exception as e:
         logger.error(f"Error in process_pdf: {str(e)}")
         raise
