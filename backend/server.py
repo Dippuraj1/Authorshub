@@ -181,67 +181,85 @@ async def process_docx(input_path, file_id, book_size, font, genre):
 
 async def process_pdf(input_path, file_id, book_size, font, genre):
     """Process a PDF file and apply formatting according to specified parameters"""
-    # This is a simplified implementation - a full version would extract content 
-    # from the PDF and reformat it, which is complex
-    
-    # For the MVP, we'll create a new PDF with the desired page size and a note
-    # that formatting was applied
-    
-    # Get book size dimensions
-    width, height = BOOK_SIZES[book_size]
-    width_pt = width * 72  # Convert inches to points (72 points per inch)
-    height_pt = height * 72
-    
-    output_path = TEMP_DIR / f"{file_id}_formatted.pdf"
-    
-    # Create a new PDF with the desired dimensions
-    doc = SimpleDocTemplate(
-        str(output_path),
-        pagesize=(width_pt, height_pt),
-        leftMargin=72,  # 1 inch = 72 points
-        rightMargin=72,
-        topMargin=72,
-        bottomMargin=72
-    )
-    
-    # Define styles
-    styles = getSampleStyleSheet()
-    title_style = styles['Heading1']
-    title_style.fontName = font
-    
-    normal_style = styles['Normal']
-    normal_style.fontName = font
-    
-    if genre == "non-fiction":
-        normal_style.leading = 14.4  # 12pt * 1.2 line spacing
-    elif genre == "novel":
-        normal_style.leading = 15.6  # 12pt * 1.3 line spacing
-    
-    # Create content
-    content = []
-    
-    # Add title
-    content.append(Paragraph("Formatted Document", title_style))
-    content.append(Spacer(1, 12))
-    
-    # Add formatting details
-    content.append(Paragraph(f"Book Size: {book_size}", normal_style))
-    content.append(Paragraph(f"Font: {font}", normal_style))
-    content.append(Paragraph(f"Genre: {genre}", normal_style))
-    content.append(Spacer(1, 24))
-    
-    # Add note about formatting
-    content.append(Paragraph(
-        "This is a preview of your formatted document. "
-        "The original PDF content has been preserved, but the page size and margins have been adjusted "
-        "according to your specifications.", 
-        normal_style
-    ))
-    
-    # Build the PDF
-    doc.build(content)
-    
-    return output_path
+    try:
+        # This is a simplified implementation - a full version would extract content 
+        # from the PDF and reformat it, which is complex
+        
+        # For the MVP, we'll create a new PDF with the desired page size and a note
+        # that formatting was applied
+        
+        # Get book size dimensions
+        width, height = BOOK_SIZES[book_size]
+        width_pt = width * 72  # Convert inches to points (72 points per inch)
+        height_pt = height * 72
+        
+        output_path = TEMP_DIR / f"{file_id}_formatted.pdf"
+        
+        # Verify the input PDF is valid by trying to open it
+        with open(input_path, 'rb') as f:
+            try:
+                reader = PyPDF2.PdfReader(f)
+                num_pages = len(reader.pages)
+                logger.info(f"PDF has {num_pages} pages")
+            except Exception as e:
+                logger.error(f"Invalid PDF file: {str(e)}")
+                raise ValueError(f"Invalid PDF file: {str(e)}")
+        
+        # Create a new PDF with the desired dimensions
+        doc = SimpleDocTemplate(
+            str(output_path),
+            pagesize=(width_pt, height_pt),
+            leftMargin=72,  # 1 inch = 72 points
+            rightMargin=72,
+            topMargin=72,
+            bottomMargin=72
+        )
+        
+        # Define styles
+        styles = getSampleStyleSheet()
+        title_style = styles['Heading1']
+        title_style.fontName = font
+        
+        normal_style = styles['Normal']
+        normal_style.fontName = font
+        
+        if genre == "non-fiction":
+            normal_style.leading = 14.4  # 12pt * 1.2 line spacing
+        elif genre == "novel":
+            normal_style.leading = 15.6  # 12pt * 1.3 line spacing
+        
+        # Create content
+        content = []
+        
+        # Add title
+        content.append(Paragraph("Formatted Document", title_style))
+        content.append(Spacer(1, 12))
+        
+        # Add formatting details
+        content.append(Paragraph(f"Book Size: {book_size}", normal_style))
+        content.append(Paragraph(f"Font: {font}", normal_style))
+        content.append(Paragraph(f"Genre: {genre}", normal_style))
+        content.append(Spacer(1, 24))
+        
+        # Add note about formatting
+        content.append(Paragraph(
+            "This is a preview of your formatted document. "
+            "The original PDF content has been preserved, but the page size and margins have been adjusted "
+            "according to your specifications.", 
+            normal_style
+        ))
+        
+        # Add page info
+        content.append(Spacer(1, 24))
+        content.append(Paragraph(f"Original PDF contained {num_pages} pages.", normal_style))
+        
+        # Build the PDF
+        doc.build(content)
+        
+        return output_path
+    except Exception as e:
+        logger.error(f"Error in process_pdf: {str(e)}")
+        raise
 
 @app.get("/api/download/{file_id}")
 async def download_file(file_id: str):
