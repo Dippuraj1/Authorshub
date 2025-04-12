@@ -113,12 +113,14 @@ class TestBookFormatter(unittest.TestCase):
             file_id = upload_response.json()['file_id']
 
             # Test status endpoint
-            status_response = requests.get(f"{self.base_url}/status/{file_id}")
+            status_response = requests.get(f"{self.base_url}/api/status/{file_id}")
+            print(f"Status response: {status_response.text}")
             self.assertEqual(status_response.status_code, 200)
             self.assertIn('status', status_response.json())
 
             # Test download endpoint
-            download_response = requests.get(f"{self.base_url}/download/{file_id}")
+            download_response = requests.get(f"{self.base_url}/api/download/{file_id}")
+            print(f"Download response status: {download_response.status_code}")
             print("Download Response Status:", download_response.status_code)
             if download_response.status_code == 200:
                 self.assertTrue(len(download_response.content) > 0)
