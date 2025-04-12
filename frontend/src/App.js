@@ -417,6 +417,105 @@ function App() {
   
   // Render Authentication Pages
   const renderAuthPage = () => {
+    // Handle forgot password mode
+    if (isForgotPassword) {
+      return (
+        <div className="auth-container">
+          <div className="auth-form-container">
+            <h2>Reset Your Password</h2>
+            
+            {/* Step 1: Enter email to get reset token */}
+            {!resetToken && (
+              <form className="auth-form" onSubmit={handleForgotPassword}>
+                <div className="form-group">
+                  <label htmlFor="email">Email</label>
+                  <input
+                    type="email"
+                    id="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="form-input"
+                  />
+                </div>
+                
+                <button 
+                  type="submit" 
+                  className="auth-button"
+                  disabled={loading}
+                >
+                  {loading ? 'Processing...' : 'Reset Password'}
+                </button>
+              </form>
+            )}
+            
+            {/* Step 2: Enter reset token and new password */}
+            {success && !resetToken && (
+              <form className="auth-form" onSubmit={handleResetPassword}>
+                <div className="form-group">
+                  <label htmlFor="resetToken">Reset Token</label>
+                  <input
+                    type="text"
+                    id="resetToken"
+                    value={resetToken}
+                    onChange={(e) => setResetToken(e.target.value)}
+                    required
+                    className="form-input"
+                    placeholder="Check your email or console log for token"
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="newPassword">New Password</label>
+                  <input
+                    type="password"
+                    id="newPassword"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                    className="form-input"
+                  />
+                </div>
+                
+                <button 
+                  type="submit" 
+                  className="auth-button"
+                  disabled={loading}
+                >
+                  {loading ? 'Processing...' : 'Set New Password'}
+                </button>
+              </form>
+            )}
+            
+            <p className="auth-switch">
+              <button
+                className="auth-switch-button"
+                onClick={() => {
+                  setIsForgotPassword(false);
+                  setError(null);
+                  setSuccess(null);
+                  setResetToken('');
+                }}
+              >
+                Back to Login
+              </button>
+            </p>
+            
+            {error && <div className="error-message">{error}</div>}
+            {success && <div className="success-message">{success}</div>}
+          </div>
+          
+          <div className="auth-info">
+            <h2>AI-powered Book Formatter</h2>
+            <p className="auth-description">
+              Format your manuscript for KDP and Google Books publishing with our powerful AI formatting tool.
+            </p>
+          </div>
+        </div>
+      );
+    }
+    
+    // Handle register/login mode
     return (
       <div className="auth-container">
         <div className="auth-form-container">
@@ -446,6 +545,22 @@ function App() {
               />
             </div>
             
+            {!isRegistering && (
+              <div className="forgot-password">
+                <button
+                  type="button"
+                  className="forgot-password-link"
+                  onClick={() => {
+                    setIsForgotPassword(true);
+                    setError(null);
+                    setSuccess(null);
+                  }}
+                >
+                  Forgot Password?
+                </button>
+              </div>
+            )}
+            
             <button 
               type="submit" 
               className="auth-button"
@@ -454,6 +569,20 @@ function App() {
               {loading ? 'Processing...' : isRegistering ? 'Register' : 'Log In'}
             </button>
           </form>
+          
+          <div className="auth-separator">
+            <span>OR</span>
+          </div>
+          
+          <button 
+            type="button" 
+            className="google-auth-button"
+            onClick={handleGoogleLogin}
+            disabled={loading}
+          >
+            <span className="google-icon">G</span>
+            {isRegistering ? 'Sign up with Google' : 'Sign in with Google'}
+          </button>
           
           <p className="auth-switch">
             {isRegistering ? 'Already have an account?' : 'Need an account?'}
@@ -500,6 +629,7 @@ function App() {
                   <li>Access to all genres</li>
                   <li>Advanced formatting options</li>
                 </ul>
+                <button className="purchase-button">Purchase Now</button>
               </div>
               
               <div className="pricing-card">
@@ -510,6 +640,7 @@ function App() {
                   <li>Access to all genres</li>
                   <li>Priority processing</li>
                 </ul>
+                <button className="purchase-button">Purchase Now</button>
               </div>
             </div>
           </div>
