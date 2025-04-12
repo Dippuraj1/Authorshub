@@ -950,12 +950,36 @@ async def process_pdf(input_path, file_id, book_size, font, genre):
         logger.error(f"Error in process_pdf: {str(e)}")
         raise
 
-@app.get("/api/download/{file_id}")
-async def download_file(file_id: str, current_user: User = Depends(get_current_active_user)):
+@app.api_route("/api/download/{file_id}", methods=["GET", "POST"])
+async def download_file(
+    file_id: str, 
+    request: Request,
+    token: str = Form(None),
+    current_user: User = Depends(get_current_active_user)
+):
+    # If token is provided in the POST request, use it for authentication
+    user = current_user
+    if token and not user:
+        try:
+            # Manually validate the token
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            email = payload.get("sub")
+            if email:
+                user = await get_user(email)
+        except JWTError:
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid authentication token",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+    
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
     # Get file information from database
     file_info = await db.uploads.find_one({
         "file_id": file_id,
-        "user_email": current_user.email  # Ensure the file belongs to the current user
+        "user_email": user.email  # Ensure the file belongs to the user
     })
     
     if not file_info:
