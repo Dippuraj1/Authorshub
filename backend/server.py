@@ -179,13 +179,26 @@ class User(BaseModel):
     tier: str = "free"
     is_active: bool = True
     usage_count: Dict[str, int] = {}  # Format: {"2025-03": 0}
+    oauth_provider: Optional[str] = None  # "google" or None for regular auth
 
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
 
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+
+class ResetPasswordConfirm(BaseModel):
+    token: str
+    new_password: str
+
+class GoogleAuthRequest(BaseModel):
+    id_token: str  # Google ID token for verification
+
 class UserInDB(User):
-    hashed_password: str
+    hashed_password: Optional[str] = None
+    reset_token: Optional[str] = None
+    reset_token_expires: Optional[datetime] = None
 
 # Helper functions for authentication
 def verify_password(plain_password, hashed_password):
