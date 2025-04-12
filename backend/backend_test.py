@@ -6,7 +6,7 @@ from pathlib import Path
 
 class BookFormatterAPITest(unittest.TestCase):
     def setUp(self):
-        self.base_url = os.environ.get('REACT_APP_BACKEND_URL', '')
+        self.base_url = "https://3f99b569-43a1-4409-b75b-97e6a1d67a11.preview.emergentagent.com"
         self.test_files_dir = Path(__file__).parent / "test_files"
         self.test_files_dir.mkdir(exist_ok=True)
         
