@@ -215,15 +215,28 @@ async def process_pdf(input_path, file_id, book_size, font, genre):
         
         output_path = TEMP_DIR / f"{file_id}_formatted.pdf"
         
-        # Verify the input PDF is valid by trying to open it
-        with open(input_path, 'rb') as f:
-            try:
-                reader = PyPDF2.PdfReader(f)
-                num_pages = len(reader.pages)
-                logger.info(f"PDF has {num_pages} pages")
-            except Exception as e:
-                logger.error(f"Invalid PDF file: {str(e)}")
-                raise ValueError(f"Invalid PDF file: {str(e)}")
+        # Verify the input PDF is readable
+        num_pages = 0
+        try:
+            with open(input_path, 'rb') as f:
+                # Check for PDF signature
+                pdf_signature = f.read(5)
+                if not pdf_signature.startswith(b'%PDF'):
+                    raise ValueError("File is not a valid PDF - missing PDF signature")
+                
+                # Try to read with PyPDF2
+                f.seek(0)
+                try:
+                    reader = PyPDF2.PdfReader(f)
+                    num_pages = len(reader.pages)
+                    logger.info(f"PDF has {num_pages} pages")
+                except Exception as pdf_err:
+                    # If PyPDF2 fails but file has PDF signature, assume it's valid but damaged
+                    logger.warning(f"PyPDF2 couldn't fully parse PDF: {str(pdf_err)}")
+                    num_pages = 1  # Assume at least one page
+        except Exception as e:
+            logger.error(f"Error verifying PDF: {str(e)}")
+            raise ValueError(f"Invalid PDF file: {str(e)}")
         
         # Create a new PDF with the desired dimensions
         doc = SimpleDocTemplate(
