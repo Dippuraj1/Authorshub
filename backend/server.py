@@ -733,9 +733,9 @@ async def upload_file(
     # Process the file based on its type
     try:
         if file_extension == ".docx":
-            output_path = await process_docx(temp_input_path, file_id, book_size, font, genre)
+            output_path = await process_docx(temp_input_path, file_id, book_size, font, genre, template)
         elif file_extension == ".pdf":
-            output_path = await process_pdf(temp_input_path, file_id, book_size, font, genre)
+            output_path = await process_pdf(temp_input_path, file_id, book_size, font, genre, template)
         
         # Update status in database
         await db.uploads.update_one(
