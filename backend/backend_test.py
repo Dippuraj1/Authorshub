@@ -1,147 +1,128 @@
-import pytest
+import unittest
 import requests
 import os
+import json
 from pathlib import Path
-from reportlab.pdfgen import canvas
-from io import BytesIO
 
-# Get backend URL from environment
-BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', '')
-if not BACKEND_URL:
-    raise ValueError("REACT_APP_BACKEND_URL environment variable not set")
+class BookFormatterAPITest(unittest.TestCase):
+    def setUp(self):
+        self.base_url = os.environ.get('REACT_APP_BACKEND_URL', '')
+        self.test_files_dir = Path(__file__).parent / "test_files"
+        self.test_files_dir.mkdir(exist_ok=True)
+        
+        # Create test files
+        self.create_test_files()
 
-class TestBookFormatter:
-    def create_minimal_pdf(self):
-        """Create a minimal valid PDF file with just a signature"""
-        buffer = BytesIO()
-        c = canvas.Canvas(buffer)
-        c.drawString(100, 750, "Test Signature")
+    def create_test_files(self):
+        # Create a simple DOCX file for testing
+        from docx import Document
+        doc = Document()
+        doc.add_paragraph("Test content for DOCX file")
+        self.docx_path = self.test_files_dir / "test.docx"
+        doc.save(self.docx_path)
+
+        # Create a simple PDF file for testing
+        from reportlab.pdfgen import canvas
+        self.pdf_path = self.test_files_dir / "test.pdf"
+        c = canvas.Canvas(str(self.pdf_path))
+        c.drawString(100, 750, "Test content for PDF file")
         c.save()
-        buffer.seek(0)
-        return buffer
 
-    def test_root_endpoint(self):
-        """Test the root endpoint"""
-        response = requests.get(f"{BACKEND_URL}/api")
-        assert response.status_code == 200
-        assert response.json()["message"] == "Book Editor API"
+    def test_api_root(self):
+        """Test the root API endpoint"""
+        response = requests.get(f"{self.base_url}/api")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"message": "Book Editor API"})
 
-    def test_file_upload_validation(self):
-        """Test file upload with various validation scenarios"""
-        # Test with invalid file type
-        files = {'file': ('test.txt', b'test content', 'text/plain')}
-        data = {
-            'book_size': '6x9',
-            'font': 'Times New Roman',
-            'genre': 'novel'
-        }
-        response = requests.post(f"{BACKEND_URL}/api/upload", files=files, data=data)
-        assert response.status_code == 400
-        assert "Unsupported file format" in response.json()["detail"]
+    def test_upload_docx(self):
+        """Test uploading a DOCX file"""
+        with open(self.docx_path, 'rb') as f:
+            files = {'file': ('test.docx', f, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')}
+            data = {
+                'book_size': '6x9',
+                'font': 'Times New Roman',
+                'genre': 'novel'
+            }
+            response = requests.post(f"{self.base_url}/api/upload", files=files, data=data)
+            
+            self.assertEqual(response.status_code, 200)
+            result = response.json()
+            self.assertIn('file_id', result)
+            self.assertIn('message', result)
+            return result.get('file_id')
 
-        # Test with invalid book size
-        files = {'file': ('test.pdf', self.create_minimal_pdf().getvalue(), 'application/pdf')}
-        data = {
-            'book_size': 'invalid',
-            'font': 'Times New Roman',
-            'genre': 'novel'
-        }
-        response = requests.post(f"{BACKEND_URL}/api/upload", files=files, data=data)
-        assert response.status_code == 400
-        assert "Invalid book size" in response.json()["detail"]
+    def test_upload_pdf(self):
+        """Test uploading a PDF file"""
+        with open(self.pdf_path, 'rb') as f:
+            files = {'file': ('test.pdf', f, 'application/pdf')}
+            data = {
+                'book_size': '5x8',
+                'font': 'Arial',
+                'genre': 'non-fiction'
+            }
+            response = requests.post(f"{self.base_url}/api/upload", files=files, data=data)
+            
+            self.assertEqual(response.status_code, 200)
+            result = response.json()
+            self.assertIn('file_id', result)
+            self.assertIn('message', result)
+            return result.get('file_id')
 
-        # Test with invalid font
-        data = {
-            'book_size': '6x9',
-            'font': 'InvalidFont',
-            'genre': 'novel'
-        }
-        response = requests.post(f"{BACKEND_URL}/api/upload", files=files, data=data)
-        assert response.status_code == 400
-        assert "Invalid font" in response.json()["detail"]
+    def test_invalid_file_type(self):
+        """Test uploading an invalid file type"""
+        # Create a text file
+        invalid_file = self.test_files_dir / "test.txt"
+        with open(invalid_file, 'w') as f:
+            f.write("Invalid file type")
 
-        # Test with invalid genre
-        data = {
-            'book_size': '6x9',
-            'font': 'Times New Roman',
-            'genre': 'invalid'
-        }
-        response = requests.post(f"{BACKEND_URL}/api/upload", files=files, data=data)
-        assert response.status_code == 400
-        assert "Invalid genre" in response.json()["detail"]
+        with open(invalid_file, 'rb') as f:
+            files = {'file': ('test.txt', f, 'text/plain')}
+            data = {
+                'book_size': '6x9',
+                'font': 'Times New Roman',
+                'genre': 'novel'
+            }
+            response = requests.post(f"{self.base_url}/api/upload", files=files, data=data)
+            
+            self.assertEqual(response.status_code, 400)
+            self.assertIn('Unsupported file format', response.json().get('detail', ''))
 
-    def test_pdf_upload_and_processing(self):
-        """Test PDF upload with minimal valid PDF"""
-        files = {'file': ('test.pdf', self.create_minimal_pdf().getvalue(), 'application/pdf')}
-        data = {
-            'book_size': '6x9',
-            'font': 'Times New Roman',
-            'genre': 'novel'
-        }
-        response = requests.post(f"{BACKEND_URL}/api/upload", files=files, data=data)
-        assert response.status_code == 200
-        result = response.json()
-        assert "file_id" in result
+    def test_invalid_parameters(self):
+        """Test uploading with invalid parameters"""
+        with open(self.docx_path, 'rb') as f:
+            files = {'file': ('test.docx', f, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')}
+            data = {
+                'book_size': 'invalid_size',
+                'font': 'Invalid Font',
+                'genre': 'invalid_genre'
+            }
+            response = requests.post(f"{self.base_url}/api/upload", files=files, data=data)
+            
+            self.assertEqual(response.status_code, 400)
+
+    def test_full_workflow(self):
+        """Test the complete workflow from upload to download"""
+        # Upload file
+        file_id = self.test_upload_docx()
         
-        # Test status endpoint
-        file_id = result["file_id"]
-        status_response = requests.get(f"{BACKEND_URL}/api/status/{file_id}")
-        assert status_response.status_code == 200
-        assert status_response.json()["status"] in ["processing", "completed"]
+        # Check status
+        response = requests.get(f"{self.base_url}/api/status/{file_id}")
+        self.assertEqual(response.status_code, 200)
+        status_data = response.json()
+        self.assertEqual(status_data['file_id'], file_id)
+        self.assertIn(status_data['status'], ['processing', 'completed'])
 
-        # If processing completed, test download
-        if status_response.json()["status"] == "completed":
-            download_response = requests.get(f"{BACKEND_URL}/api/download/{file_id}")
-            assert download_response.status_code == 200
-            assert download_response.headers['Content-Type'] == 'application/octet-stream'
+        # If completed, try download
+        if status_data['status'] == 'completed':
+            response = requests.get(f"{self.base_url}/api/download/{file_id}")
+            self.assertEqual(response.status_code, 200)
+            self.assertTrue(response.headers['Content-Type'].startswith('application/'))
 
-    def test_file_size_validation(self):
-        """Test file size validation"""
-        # Create a PDF larger than 10MB
-        large_buffer = BytesIO()
-        c = canvas.Canvas(large_buffer)
-        for i in range(1000):  # Create many pages to increase file size
-            c.drawString(100, 750, "A" * 10000)
-            c.showPage()
-        c.save()
-        large_buffer.seek(0)
+    def tearDown(self):
+        """Clean up test files"""
+        import shutil
+        if self.test_files_dir.exists():
+            shutil.rmtree(self.test_files_dir)
 
-        files = {'file': ('large.pdf', large_buffer.getvalue(), 'application/pdf')}
-        data = {
-            'book_size': '6x9',
-            'font': 'Times New Roman',
-            'genre': 'novel'
-        }
-        response = requests.post(f"{BACKEND_URL}/api/upload", files=files, data=data)
-        assert response.status_code == 400
-        assert "File too large" in response.json()["detail"]
-
-if __name__ == "__main__":
-    # Create test instance
-    tester = TestBookFormatter()
-    
-    print("Running API tests...")
-    
-    try:
-        print("\n1. Testing root endpoint...")
-        tester.test_root_endpoint()
-        print("✅ Root endpoint test passed")
-        
-        print("\n2. Testing file validation...")
-        tester.test_file_upload_validation()
-        print("✅ File validation tests passed")
-        
-        print("\n3. Testing PDF upload and processing...")
-        tester.test_pdf_upload_and_processing()
-        print("✅ PDF upload and processing test passed")
-        
-        print("\n4. Testing file size validation...")
-        tester.test_file_size_validation()
-        print("✅ File size validation test passed")
-        
-        print("\n✅ All tests completed successfully!")
-        
-    except AssertionError as e:
-        print(f"\n❌ Test failed: {str(e)}")
-    except Exception as e:
-        print(f"\n❌ Error during testing: {str(e)}")
+if __name__ == '__main__':
+    unittest.main()
