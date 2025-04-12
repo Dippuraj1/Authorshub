@@ -41,7 +41,8 @@ class TestBookFormatter(unittest.TestCase):
                 pass
 
     def test_root_endpoint(self):
-        response = requests.get(f"{self.base_url}")
+        response = requests.get(f"{self.base_url}/api")
+        print(f"Root endpoint response: {response.text}")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"message": "Book Editor API"})
 
