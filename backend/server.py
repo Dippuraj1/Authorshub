@@ -248,13 +248,25 @@ async def process_pdf(input_path, file_id, book_size, font, genre):
             bottomMargin=72
         )
         
-        # Define styles
+        # Define styles with safer font handling
         styles = getSampleStyleSheet()
-        title_style = styles['Heading1']
-        title_style.fontName = font
+        title_style = styles['Heading1'].clone()
         
-        normal_style = styles['Normal']
-        normal_style.fontName = font
+        # Use safer font approach with fallbacks
+        if font in ['Times New Roman', 'Georgia', 'Garamond']:
+            # Serif fonts
+            title_style.fontName = 'Times-Roman'  # ReportLab built-in font
+        else:
+            # Sans-serif or default
+            title_style.fontName = 'Helvetica'  # ReportLab built-in font
+        
+        normal_style = styles['Normal'].clone()
+        
+        # Apply same font family logic to normal text
+        if font in ['Times New Roman', 'Georgia', 'Garamond']:
+            normal_style.fontName = 'Times-Roman'
+        else:
+            normal_style.fontName = 'Helvetica'
         
         if genre == "non-fiction":
             normal_style.leading = 14.4  # 12pt * 1.2 line spacing
