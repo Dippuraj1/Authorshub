@@ -674,6 +674,7 @@ async def upload_file(
     book_size: str = Form(...),
     font: str = Form(...),
     genre: str = Form(...),
+    template: str = Form("standard"),  # Default to standard template
     current_user: User = Depends(get_current_active_user)
 ):
     # Validate input parameters
