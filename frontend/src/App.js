@@ -409,7 +409,23 @@ function App() {
     if (!fileToDownload) return;
     
     try {
-      window.open(`${BACKEND_URL}/api/download/${fileToDownload}`, '_blank');
+      // Create a hidden form to post the authorization token to the download endpoint
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = `${BACKEND_URL}/api/download/${fileToDownload}`;
+      form.target = '_blank';
+      
+      // Add token as hidden input
+      const tokenInput = document.createElement('input');
+      tokenInput.type = 'hidden';
+      tokenInput.name = 'token';
+      tokenInput.value = token;
+      form.appendChild(tokenInput);
+      
+      // Add form to document and submit
+      document.body.appendChild(form);
+      form.submit();
+      document.body.removeChild(form);
     } catch (err) {
       setError('Error downloading file');
     }
