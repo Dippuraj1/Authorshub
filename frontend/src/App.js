@@ -1027,8 +1027,8 @@ function App() {
                       <button
                         className="pricing-button"
                         onClick={() => {
-                          alert("Payment integration will be added once you provide the API keys for Razorpay/Stripe.");
-                          // This will be replaced with actual payment integration code
+                          setPendingSubscription(tier.id);
+                          setShowPaymentPage(true);
                         }}
                         disabled={loading}
                       >
