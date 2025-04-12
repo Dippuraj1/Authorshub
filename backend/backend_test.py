@@ -4,7 +4,7 @@ import json
 import os
 from datetime import datetime
 
-BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', '')
+BACKEND_URL = "https://3f99b569-43a1-4409-b75b-97e6a1d67a11.preview.emergentagent.com"
 
 class BookFormatterAPITest(unittest.TestCase):
     def setUp(self):
