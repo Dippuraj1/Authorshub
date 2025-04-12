@@ -62,17 +62,35 @@ class BookFormatAITester:
 
     def test_login(self):
         """Test login and get token"""
-        data = {
-            "username": self.test_user_email,
-            "password": self.test_password
-        }
-        success, response = self.run_test(
-            "Login",
-            "POST",
-            "token",
-            200,
-            data=data
-        )
+        # For login, we need to send form data
+        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+        url = f"{self.base_url}/api/token"
+        
+        print(f"\n🔍 Testing Login...")
+        try:
+            data = {
+                "username": self.test_user_email,
+                "password": self.test_password
+            }
+            response = requests.post(url, data=data, headers=headers)
+            
+            success = response.status_code == 200
+            if success:
+                self.tests_passed += 1
+                print(f"✅ Passed - Status: {response.status_code}")
+                response_data = response.json()
+                print(f"Response: {response_data}")
+                if 'access_token' in response_data:
+                    self.token = response_data['access_token']
+                    return True
+            else:
+                print(f"❌ Failed - Expected 200, got {response.status_code}")
+                print(f"Response: {response.json()}")
+            
+            return False
+        except Exception as e:
+            print(f"❌ Failed - Error: {str(e)}")
+            return False
         if success and 'access_token' in response:
             self.token = response['access_token']
             return True
