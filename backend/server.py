@@ -924,6 +924,7 @@ async def process_pdf(input_path, file_id, book_size, font, genre, template="sta
             content.append(Paragraph(f"Book Size: {book_size}", normal_style))
             content.append(Paragraph(f"Font: {font} (preview shown in Helvetica)", normal_style))
             content.append(Paragraph(f"Genre: {GENRE_OPTIONS[genre]['name']}", normal_style))
+            content.append(Paragraph(f"Template: {template.capitalize()}", normal_style))
             content.append(Spacer(1, 24))
             
             # Add note about formatting
