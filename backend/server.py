@@ -83,15 +83,29 @@ async def upload_file(
     if genre not in ["novel", "poetry", "non-fiction"]:
         raise HTTPException(status_code=400, detail="Invalid genre. Choose from: novel, poetry, non-fiction")
     
+    # Validate file type
+    file_extension = Path(file.filename).suffix.lower()
+    if file_extension not in [".docx", ".pdf"]:
+        raise HTTPException(status_code=400, detail="Unsupported file format. Please upload .docx or .pdf files only.")
+    
+    # Validate file size (max 10MB)
+    max_size_mb = 10
+    max_size_bytes = max_size_mb * 1024 * 1024
+    content = await file.read(max_size_bytes + 1)
+    if len(content) > max_size_bytes:
+        raise HTTPException(status_code=400, detail=f"File too large. Maximum size is {max_size_mb}MB.")
+    
+    # Reset file position
+    await file.seek(0)
+    
     # Generate a unique ID for this upload
     file_id = str(uuid.uuid4())
     
     # Save the uploaded file
-    file_extension = Path(file.filename).suffix.lower()
     temp_input_path = TEMP_DIR / f"{file_id}_input{file_extension}"
     
     with open(temp_input_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+        buffer.write(content)
     
     # Store file metadata in MongoDB
     await db.uploads.insert_one({
@@ -109,8 +123,6 @@ async def upload_file(
             output_path = await process_docx(temp_input_path, file_id, book_size, font, genre)
         elif file_extension == ".pdf":
             output_path = await process_pdf(temp_input_path, file_id, book_size, font, genre)
-        else:
-            raise HTTPException(status_code=400, detail="Unsupported file format. Please upload .docx or .pdf files only.")
         
         # Update status in database
         await db.uploads.update_one(
@@ -119,6 +131,14 @@ async def upload_file(
         )
         
         return {"file_id": file_id, "message": "File processed successfully"}
+    
+    except ValueError as ve:
+        logger.error(f"Validation error: {str(ve)}")
+        await db.uploads.update_one(
+            {"file_id": file_id},
+            {"$set": {"status": "failed", "error": str(ve)}}
+        )
+        raise HTTPException(status_code=400, detail=str(ve))
     
     except Exception as e:
         logger.error(f"Error processing file: {str(e)}")
