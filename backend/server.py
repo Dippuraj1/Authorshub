@@ -725,6 +725,7 @@ async def upload_file(
         "book_size": book_size,
         "font": font,
         "genre": genre,
+        "template": template,
         "status": "processing",
         "created_at": datetime.utcnow()
     })
