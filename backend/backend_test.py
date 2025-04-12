@@ -5,7 +5,7 @@ import tempfile
 from pathlib import Path
 
 # Get the backend URL from environment variable
-BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', '')
+BACKEND_URL = "https://3f99b569-43a1-4409-b75b-97e6a1d67a11.preview.emergentagent.com"
 
 class TestBookFormatter:
     def setup_method(self):
