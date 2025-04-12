@@ -497,6 +497,117 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     )
     return {"access_token": access_token, "token_type": "bearer", "user_tier": user.tier}
 
+@app.post("/api/google-auth", response_model=Token)
+async def google_auth(auth_request: GoogleAuthRequest):
+    """
+    Authenticates a user using Google OAuth.
+    This is a placeholder - will need to be implemented with actual Google verification.
+    """
+    try:
+        # In a real implementation, we would verify the token with Google
+        # For now, we'll assume the token is "simulate_valid_token" for testing
+        if auth_request.id_token != "simulate_valid_token":
+            raise HTTPException(status_code=401, detail="Invalid Google token")
+        
+        # Here we would extract user information from the verified token
+        # For testing, we'll use a dummy email
+        google_email = "google_user@example.com"
+        
+        # Check if the user exists
+        user = await db.users.find_one({"email": google_email})
+        
+        if not user:
+            # Create a new user
+            user = {
+                "email": google_email,
+                "tier": "free",
+                "is_active": True,
+                "usage_count": {},
+                "oauth_provider": "google"
+            }
+            await db.users.insert_one(user)
+        elif not user.get("oauth_provider"):
+            # Update existing user to mark them as a Google OAuth user
+            await db.users.update_one(
+                {"email": google_email},
+                {"$set": {"oauth_provider": "google"}}
+            )
+        
+        # Create access token
+        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = create_access_token(
+            data={"sub": google_email}, expires_delta=access_token_expires
+        )
+        
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "user_tier": user.get("tier", "free")
+        }
+        
+    except Exception as e:
+        logger.error(f"Google auth error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Google authentication error: {str(e)}")
+
+@app.post("/api/forgot-password")
+async def forgot_password(request: ResetPasswordRequest):
+    """Request a password reset"""
+    user = await db.users.find_one({"email": request.email})
+    
+    if not user:
+        # Don't reveal that the user doesn't exist for security
+        return {"message": "If your email is registered, you will receive a password reset link."}
+    
+    # Check if user is using OAuth
+    if user.get("oauth_provider"):
+        raise HTTPException(
+            status_code=400, 
+            detail="This account uses Google authentication. Please sign in with Google."
+        )
+    
+    # Generate a password reset token
+    reset_token = str(uuid.uuid4())
+    reset_token_expires = datetime.utcnow() + timedelta(hours=24)
+    
+    # Store the token in the database
+    await db.users.update_one(
+        {"email": request.email},
+        {"$set": {
+            "reset_token": reset_token,
+            "reset_token_expires": reset_token_expires
+        }}
+    )
+    
+    # In a real application, send an email with the reset link
+    # Here we'll just return the token for testing purposes
+    logger.info(f"Password reset token for {request.email}: {reset_token}")
+    
+    return {"message": "If your email is registered, you will receive a password reset link."}
+
+@app.post("/api/reset-password")
+async def reset_password(request: ResetPasswordConfirm):
+    """Reset password using token"""
+    user = await db.users.find_one({
+        "reset_token": request.token,
+        "reset_token_expires": {"$gt": datetime.utcnow()}
+    })
+    
+    if not user:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+    
+    # Update the user's password
+    hashed_password = get_password_hash(request.new_password)
+    
+    await db.users.update_one(
+        {"_id": user["_id"]},
+        {
+            "$set": {"hashed_password": hashed_password},
+            "$unset": {"reset_token": "", "reset_token_expires": ""}
+        }
+    )
+    
+    return {"message": "Password has been reset successfully"}
+
 @app.get("/api/users/me", response_model=User)
 async def read_users_me(current_user: User = Depends(get_current_active_user)):
     return current_user
