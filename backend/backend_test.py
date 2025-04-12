@@ -74,7 +74,8 @@ class TestBookFormatter(unittest.TestCase):
                 'font': 'Times New Roman',
                 'genre': 'non-fiction'
             }
-            response = requests.post(f"{self.base_url}/upload", files=files, data=data)
+            response = requests.post(f"{self.base_url}/api/upload", files=files, data=data)
+            print(f"PDF Upload response: {response.text}")
             
             print("PDF Upload Response:", response.text)
             self.assertEqual(response.status_code, 200)
