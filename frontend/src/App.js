@@ -40,10 +40,13 @@ function App() {
   const [bookSize, setBookSize] = useState('6x9');
   const [font, setFont] = useState('Times New Roman');
   const [genre, setGenre] = useState('non_fiction');
+  const [template, setTemplate] = useState('standard');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [fileId, setFileId] = useState(null);
+  const [showPaymentPage, setShowPaymentPage] = useState(false);
+  const [pendingSubscription, setPendingSubscription] = useState(null);
   
   // App data
   const [usageData, setUsageData] = useState(null);
