@@ -431,6 +431,169 @@ function App() {
     }
   };
   
+  // Render Landing Page
+  const renderLandingPage = () => {
+    return (
+      <>
+        <div className="hero-section">
+          <div className="hero-content">
+            <h1>Professional Book Formatting for Authors</h1>
+            <p className="hero-subtitle">Format your manuscript for KDP and Google Books publishing in minutes</p>
+            <div className="hero-cta-buttons">
+              <button className="primary-button" onClick={() => setIsRegistering(false)}>Log In</button>
+              <button className="secondary-button" onClick={() => setIsRegistering(true)}>Sign Up Free</button>
+            </div>
+          </div>
+          <div className="hero-image">
+            <img src="https://images.unsplash.com/photo-1739300293504-234817eead52" alt="Professional book formatting service" />
+          </div>
+        </div>
+        
+        <div className="features-section">
+          <div className="section-heading">
+            <h2>The Easiest Way to Format Your Books</h2>
+            <p>Save time and publish faster with our intelligent formatting engine</p>
+          </div>
+          
+          <div className="features-grid">
+            <div className="feature-card">
+              <div className="feature-icon">
+                <img src="https://cdn-icons-png.flaticon.com/128/1056/1056289.png" alt="Book Formatting" />
+              </div>
+              <h3>Professional Formatting</h3>
+              <p>Industry-standard formatting for all major publishing platforms</p>
+            </div>
+            
+            <div className="feature-card">
+              <div className="feature-icon">
+                <img src="https://cdn-icons-png.flaticon.com/128/4040/4040270.png" alt="Multiple Genres" />
+              </div>
+              <h3>10+ Genre Templates</h3>
+              <p>Specialized templates for fiction, non-fiction, poetry, and more</p>
+            </div>
+            
+            <div className="feature-card">
+              <div className="feature-icon">
+                <img src="https://static.thenounproject.com/png/2124339-200.png" alt="Speed" />
+              </div>
+              <h3>Instant Results</h3>
+              <p>Get your perfectly formatted manuscript in under 2 minutes</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="testimonials-section">
+          <div className="section-heading">
+            <h2>Trusted by Thousands of Authors</h2>
+            <p>See what authors are saying about our formatting tool</p>
+          </div>
+          
+          <div className="testimonials-grid">
+            <div className="testimonial-card">
+              <div className="quote">"This tool saved me hours of frustration. My book looks professional and was accepted by KDP on the first try."</div>
+              <div className="author">
+                <div className="author-name">Sarah Johnson</div>
+                <div className="author-title">Fiction Author</div>
+              </div>
+            </div>
+            
+            <div className="testimonial-card">
+              <div className="quote">"The genre-specific formatting was exactly what I needed for my poetry collection. Worth every penny."</div>
+              <div className="author">
+                <div className="author-name">Michael Chen</div>
+                <div className="author-title">Poet & Educator</div>
+              </div>
+            </div>
+            
+            <div className="testimonial-card">
+              <div className="quote">"I've published 5 books using this tool. The time savings alone makes it invaluable to my business."</div>
+              <div className="author">
+                <div className="author-name">Jessica Williams</div>
+                <div className="author-title">Non-Fiction Author</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="pricing-section">
+          <div className="section-heading">
+            <h2>Simple, Transparent Pricing</h2>
+            <p>Choose the plan that works for your publishing needs</p>
+          </div>
+          
+          <div className="pricing-cards">
+            <div className="pricing-card">
+              <div className="pricing-header">
+                <h3>Free</h3>
+                <p className="pricing-price">$0<span>/month</span></p>
+              </div>
+              <div className="pricing-features">
+                <ul>
+                  <li>Format 2 books per month</li>
+                  <li>3 genre templates</li>
+                  <li>Standard formatting options</li>
+                  <li>Basic email support</li>
+                </ul>
+              </div>
+              <button className="pricing-button" onClick={() => setIsRegistering(true)}>Get Started</button>
+            </div>
+            
+            <div className="pricing-card featured">
+              <div className="best-value">Most Popular</div>
+              <div className="pricing-header">
+                <h3>Creator</h3>
+                <p className="pricing-price">$5<span>/month</span></p>
+              </div>
+              <div className="pricing-features">
+                <ul>
+                  <li>Format 10 books per month</li>
+                  <li>All genre templates</li>
+                  <li>Advanced formatting options</li>
+                  <li>Priority email support</li>
+                </ul>
+              </div>
+              <button className="pricing-button" 
+                onClick={() => {
+                  alert("Payment integration will be added once you provide the API keys for Razorpay/Stripe.");
+                }}
+              >
+                Subscribe Now
+              </button>
+            </div>
+            
+            <div className="pricing-card">
+              <div className="pricing-header">
+                <h3>Business</h3>
+                <p className="pricing-price">$25<span>/month</span></p>
+              </div>
+              <div className="pricing-features">
+                <ul>
+                  <li>Format 50 books per month</li>
+                  <li>All genre templates</li>
+                  <li>Advanced formatting options</li>
+                  <li>Dedicated support</li>
+                </ul>
+              </div>
+              <button className="pricing-button"
+                onClick={() => {
+                  alert("Payment integration will be added once you provide the API keys for Razorpay/Stripe.");
+                }}
+              >
+                Subscribe Now
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div className="cta-section">
+          <h2>Ready to publish your book?</h2>
+          <p>Start formatting your manuscript in minutes</p>
+          <button className="primary-button" onClick={() => setIsRegistering(true)}>Get Started for Free</button>
+        </div>
+      </>
+    );
+  };
+  
   // Render Authentication Pages
   const renderAuthPage = () => {
     // Handle forgot password mode
@@ -521,11 +684,8 @@ function App() {
             {success && <div className="success-message">{success}</div>}
           </div>
           
-          <div className="auth-info">
-            <h2>AI-powered Book Formatter</h2>
-            <p className="auth-description">
-              Format your manuscript for KDP and Google Books publishing with our powerful AI formatting tool.
-            </p>
+          <div className="auth-image">
+            <img src="https://images.unsplash.com/photo-1739300293504-234817eead52" alt="Professional book formatting" />
           </div>
         </div>
       );
@@ -618,48 +778,8 @@ function App() {
           {success && <div className="success-message">{success}</div>}
         </div>
         
-        <div className="auth-info">
-          <h2>AI-powered Book Formatter</h2>
-          <p className="auth-description">
-            Format your manuscript for KDP and Google Books publishing with our powerful AI formatting tool.
-          </p>
-          
-          <div className="pricing-overview">
-            <h3>Pricing Plans</h3>
-            <div className="pricing-cards">
-              <div className="pricing-card">
-                <h4>Free</h4>
-                <p className="price">$0/month</p>
-                <ul>
-                  <li>Format 2 books per month</li>
-                  <li>Access to 3 genres</li>
-                  <li>Standard formatting options</li>
-                </ul>
-              </div>
-              
-              <div className="pricing-card featured">
-                <h4>Creator</h4>
-                <p className="price">$5/month</p>
-                <ul>
-                  <li>Format 10 books per month</li>
-                  <li>Access to all genres</li>
-                  <li>Advanced formatting options</li>
-                </ul>
-                <button className="purchase-button">Purchase Now</button>
-              </div>
-              
-              <div className="pricing-card">
-                <h4>Business</h4>
-                <p className="price">$25/month</p>
-                <ul>
-                  <li>Format 50 books per month</li>
-                  <li>Access to all genres</li>
-                  <li>Priority processing</li>
-                </ul>
-                <button className="purchase-button">Purchase Now</button>
-              </div>
-            </div>
-          </div>
+        <div className="auth-image">
+          <img src="https://images.unsplash.com/photo-1739300293504-234817eead52" alt="Professional book formatting" />
         </div>
       </div>
     );
@@ -668,7 +788,7 @@ function App() {
   // Render Upload Tab
   const renderUploadTab = () => {
     return (
-      <section className="app-section">
+      <section className="app-section upload-section">
         <h2>Upload Your Manuscript</h2>
         <p>Upload your book in .docx or PDF format and we'll format it according to industry standards.</p>
         
@@ -703,77 +823,79 @@ function App() {
             </label>
           </div>
           
-          <div className="form-group">
-            <label htmlFor="bookSize">Book Size:</label>
-            <select 
-              id="bookSize" 
-              value={bookSize} 
-              onChange={(e) => setBookSize(e.target.value)}
-              className="form-select"
-            >
-              {BOOK_SIZES.map(size => (
-                <option key={size.value} value={size.value}>{size.label}</option>
-              ))}
-            </select>
-            <div className="form-help">
-              Choose the dimensions for your book. Different sizes work better for different genres.
-            </div>
-          </div>
-          
-          <div className="form-group">
-            <label htmlFor="font">Font:</label>
-            <select 
-              id="font" 
-              value={font} 
-              onChange={(e) => setFont(e.target.value)}
-              className="form-select"
-            >
-              {FONT_OPTIONS.map(option => (
-                <option key={option.value} value={option.value} style={option.style}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <div className="font-preview" style={{ fontFamily: font }}>
-              This is a preview of the selected font.
-            </div>
-          </div>
-          
-          <div className="form-group">
-            <label htmlFor="genre">Genre:</label>
-            <select 
-              id="genre" 
-              value={genre} 
-              onChange={(e) => setGenre(e.target.value)}
-              className="form-select"
-            >
-              {genreOptions.map(option => (
-                <option 
-                  key={option.id} 
-                  value={option.id}
-                  disabled={!option.allowed}
-                >
-                  {option.name}{!option.allowed ? ' (Upgrade Required)' : ''}
-                </option>
-              ))}
-            </select>
-            {genreOptions.length > 0 && (
+          <div className="formatting-options">
+            <div className="form-group">
+              <label htmlFor="bookSize">Book Size:</label>
+              <select 
+                id="bookSize" 
+                value={bookSize} 
+                onChange={(e) => setBookSize(e.target.value)}
+                className="form-select"
+              >
+                {BOOK_SIZES.map(size => (
+                  <option key={size.value} value={size.value}>{size.label}</option>
+                ))}
+              </select>
               <div className="form-help">
-                {genreOptions.find(o => o.id === genre)?.description || ''}
-                {!genreOptions.find(o => o.id === genre)?.allowed && (
-                  <div className="upgrade-note">
-                    This genre requires a subscription upgrade.
-                    <button
-                      type="button"
-                      className="upgrade-button-small"
-                      onClick={() => setCurrentTab('subscription')}
-                    >
-                      View Plans
-                    </button>
-                  </div>
-                )}
+                Choose the dimensions for your book. Different sizes work better for different genres.
               </div>
-            )}
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="font">Font:</label>
+              <select 
+                id="font" 
+                value={font} 
+                onChange={(e) => setFont(e.target.value)}
+                className="form-select"
+              >
+                {FONT_OPTIONS.map(option => (
+                  <option key={option.value} value={option.value} style={option.style}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <div className="font-preview" style={{ fontFamily: font }}>
+                This is a preview of the selected font.
+              </div>
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="genre">Genre:</label>
+              <select 
+                id="genre" 
+                value={genre} 
+                onChange={(e) => setGenre(e.target.value)}
+                className="form-select"
+              >
+                {genreOptions.map(option => (
+                  <option 
+                    key={option.id} 
+                    value={option.id}
+                    disabled={!option.allowed}
+                  >
+                    {option.name}{!option.allowed ? ' (Upgrade Required)' : ''}
+                  </option>
+                ))}
+              </select>
+              {genreOptions.length > 0 && (
+                <div className="form-help">
+                  {genreOptions.find(o => o.id === genre)?.description || ''}
+                  {!genreOptions.find(o => o.id === genre)?.allowed && (
+                    <div className="upgrade-note">
+                      This genre requires a subscription upgrade.
+                      <button
+                        type="button"
+                        className="upgrade-button-small"
+                        onClick={() => setCurrentTab('subscription')}
+                      >
+                        View Plans
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
           
           <button 
@@ -802,7 +924,7 @@ function App() {
   // Render History Tab
   const renderHistoryTab = () => {
     return (
-      <section className="app-section">
+      <section className="app-section history-section">
         <h2>Your Formatted Books</h2>
         <p>View and download your previously formatted books.</p>
         
@@ -864,31 +986,34 @@ function App() {
   // Render Subscription Tab
   const renderSubscriptionTab = () => {
     return (
-      <section className="app-section">
+      <section className="app-section subscription-section">
         <h2>Subscription Plans</h2>
         <p>Choose the plan that's right for you.</p>
         
-        <div className="subscription-container">
+        <div className="pricing-cards">
           {subscriptionTiers.map(tier => (
             <div 
               key={tier.id} 
-              className={`subscription-card ${tier.id === userTier ? 'current-plan' : ''}`}
+              className={`pricing-card ${tier.id === userTier ? 'current-plan' : ''} ${tier.id === 'creator' ? 'featured' : ''}`}
             >
-              <div className="subscription-header">
+              {tier.id === 'creator' && <div className="best-value">Most Popular</div>}
+              {tier.id === userTier && <div className="current-plan-badge">Current Plan</div>}
+              
+              <div className="pricing-header">
                 <h3>{tier.name}</h3>
-                <p className="subscription-price">${tier.price}/month</p>
-                {tier.id === userTier && (
-                  <div className="current-plan-badge">Current Plan</div>
-                )}
+                <p className="pricing-price">${tier.price}<span>/month</span></p>
               </div>
               
-              <div className="subscription-features">
-                <p><strong>Book Limit:</strong> {tier.monthly_limit} per month</p>
-                <p><strong>Available Genres:</strong></p>
-                <ul className="genre-list">
-                  {tier.allowed_genres.map(genre => (
-                    <li key={genre}>{genre}</li>
-                  ))}
+              <div className="pricing-features">
+                <ul>
+                  <li><strong>{tier.monthly_limit}</strong> books per month</li>
+                  <li>
+                    <strong>
+                      {tier.id === 'free' ? '3' : 'All'}
+                    </strong> genres available
+                  </li>
+                  <li>{tier.id === 'free' ? 'Standard' : 'Advanced'} formatting options</li>
+                  <li>{tier.id === 'business' ? 'Dedicated' : tier.id === 'creator' ? 'Priority' : 'Basic'} support</li>
                 </ul>
               </div>
               
@@ -897,18 +1022,18 @@ function App() {
                   <>
                     {tier.price > 0 ? (
                       <button
-                        className="purchase-button"
+                        className="pricing-button"
                         onClick={() => {
                           alert("Payment integration will be added once you provide the API keys for Razorpay/Stripe.");
                           // This will be replaced with actual payment integration code
                         }}
                         disabled={loading}
                       >
-                        Purchase Now
+                        Subscribe Now
                       </button>
                     ) : (
                       <button
-                        className="upgrade-button"
+                        className="pricing-button downgrade"
                         onClick={() => handleUpgrade(tier.id)}
                         disabled={loading}
                       >
@@ -950,67 +1075,118 @@ function App() {
   return (
     <div className="app-container">
       <header className="app-header">
-        <h1>AI-powered Book Formatter</h1>
-        <p className="subtitle">Format your manuscript for KDP and Google Books publishing</p>
-        
-        {isLoggedIn && (
-          <div className="user-controls">
-            <button
-              className="logout-button"
-              onClick={handleLogout}
-            >
-              Log Out
-            </button>
+        <div className="header-content">
+          <div className="logo">
+            <h1>BookFormat<span>AI</span></h1>
           </div>
-        )}
+          
+          <nav className="main-nav">
+            {isLoggedIn ? (
+              <>
+                <button 
+                  className={`nav-link ${currentTab === 'upload' ? 'active' : ''}`}
+                  onClick={() => setCurrentTab('upload')}
+                >
+                  Upload
+                </button>
+                <button 
+                  className={`nav-link ${currentTab === 'history' ? 'active' : ''}`}
+                  onClick={() => setCurrentTab('history')}
+                >
+                  History
+                </button>
+                <button 
+                  className={`nav-link ${currentTab === 'subscription' ? 'active' : ''}`}
+                  onClick={() => setCurrentTab('subscription')}
+                >
+                  Subscription
+                </button>
+                <button 
+                  className={`nav-link ${currentTab === 'standards' ? 'active' : ''}`}
+                  onClick={() => setCurrentTab('standards')}
+                >
+                  Standards
+                </button>
+                <button
+                  className="logout-button"
+                  onClick={handleLogout}
+                >
+                  Log Out
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  className="nav-link"
+                  onClick={() => setIsRegistering(false)}
+                >
+                  Log In
+                </button>
+                <button
+                  className="signup-button"
+                  onClick={() => setIsRegistering(true)}
+                >
+                  Sign Up Free
+                </button>
+              </>
+            )}
+          </nav>
+        </div>
       </header>
       
       <main className="app-main">
-        <div className="app-content">
-          {!isLoggedIn ? (
-            renderAuthPage()
-          ) : (
-            <>
-              <div className="tabs-container">
-                <div className="tabs">
-                  <button
-                    className={`tab ${currentTab === 'upload' ? 'active' : ''}`}
-                    onClick={() => setCurrentTab('upload')}
-                  >
-                    Upload & Format
-                  </button>
-                  <button
-                    className={`tab ${currentTab === 'history' ? 'active' : ''}`}
-                    onClick={() => setCurrentTab('history')}
-                  >
-                    History
-                  </button>
-                  <button
-                    className={`tab ${currentTab === 'subscription' ? 'active' : ''}`}
-                    onClick={() => setCurrentTab('subscription')}
-                  >
-                    Subscription
-                  </button>
-                  <button
-                    className={`tab ${currentTab === 'standards' ? 'active' : ''}`}
-                    onClick={() => setCurrentTab('standards')}
-                  >
-                    Formatting Standards
-                  </button>
-                </div>
-              </div>
-              
-              {currentTab === 'upload' && renderUploadTab()}
-              {currentTab === 'history' && renderHistoryTab()}
-              {currentTab === 'subscription' && renderSubscriptionTab()}
-              {currentTab === 'standards' && renderStandardsTab()}
-            </>
-          )}
-        </div>
+        {!isLoggedIn ? (
+          isRegistering || isForgotPassword ? renderAuthPage() : renderLandingPage()
+        ) : (
+          <div className="dashboard-container">
+            {currentTab === 'upload' && renderUploadTab()}
+            {currentTab === 'history' && renderHistoryTab()}
+            {currentTab === 'subscription' && renderSubscriptionTab()}
+            {currentTab === 'standards' && renderStandardsTab()}
+          </div>
+        )}
       </main>
       
       <footer className="app-footer">
-        <p>&copy; 2025 AI-powered Book Formatter</p>
+        <div className="footer-content">
+          <div className="footer-section">
+            <h3>BookFormatAI</h3>
+            <p>Professional book formatting for authors and publishers.</p>
+          </div>
+          
+          <div className="footer-section">
+            <h3>Features</h3>
+            <ul>
+              <li>Genre-specific formatting</li>
+              <li>KDP & Google Books compatible</li>
+              <li>Multiple book sizes</li>
+              <li>Custom fonts & styles</li>
+            </ul>
+          </div>
+          
+          <div className="footer-section">
+            <h3>Resources</h3>
+            <ul>
+              <li>Formatting Standards</li>
+              <li>Publishing Guide</li>
+              <li>Help Center</li>
+              <li>Contact Support</li>
+            </ul>
+          </div>
+          
+          <div className="footer-section">
+            <h3>Legal</h3>
+            <ul>
+              <li>Terms of Service</li>
+              <li>Privacy Policy</li>
+              <li>Cookie Policy</li>
+            </ul>
+          </div>
+        </div>
+        
+        <div className="footer-bottom">
+          <p>&copy; 2025 BookFormatAI. All rights reserved.</p>
+        </div>
       </footer>
     </div>
   );
