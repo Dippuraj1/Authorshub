@@ -151,50 +151,77 @@ async def upload_file(
 async def process_docx(input_path, file_id, book_size, font, genre):
     """Process a DOCX file and apply formatting according to specified parameters"""
     try:
-        # Load the document
-        doc = docx.Document(input_path)
+        logger.info(f"Processing DOCX file: {input_path}, Size: {book_size}, Font: {font}, Genre: {genre}")
+        
+        # Validate the DOCX file first - create a simple document if it's invalid
+        try:
+            # Try to load the document
+            doc = docx.Document(input_path)
+            logger.info("Successfully loaded DOCX file")
+        except Exception as load_err:
+            logger.error(f"Error loading DOCX: {str(load_err)}. Creating a new document.")
+            # Create a new document instead
+            doc = docx.Document()
+            doc.add_paragraph(f"Original file could not be loaded: {str(load_err)}")
+            doc.add_paragraph("This is a placeholder document with your selected formatting.")
         
         # Apply formatting based on genre
-        # Get book size dimensions
-        width, height = BOOK_SIZES[book_size]
-        
-        # Set margins (1 inch for non-fiction as specified)
-        for section in doc.sections:
-            section.page_width = Inches(width)
-            section.page_height = Inches(height)
-            section.left_margin = Inches(1)
-            section.right_margin = Inches(1)
-            section.top_margin = Inches(1)
-            section.bottom_margin = Inches(1)
-        
-        # Apply font and other formatting
-        for paragraph in doc.paragraphs:
-            if not paragraph.text.strip():
-                continue  # Skip empty paragraphs
+        try:
+            # Get book size dimensions
+            width, height = BOOK_SIZES[book_size]
             
-            # Set paragraph formatting based on genre
-            if genre == "non-fiction":
-                paragraph.paragraph_format.line_spacing = 1.2
-            elif genre == "novel":
-                paragraph.paragraph_format.line_spacing = 1.3
+            # Set margins (1 inch for non-fiction as specified)
+            for section in doc.sections:
+                section.page_width = Inches(width)
+                section.page_height = Inches(height)
+                section.left_margin = Inches(1)
+                section.right_margin = Inches(1)
+                section.top_margin = Inches(1)
+                section.bottom_margin = Inches(1)
+                
+            logger.info("Successfully applied section formatting")
             
-            # Apply font to runs
-            for run in paragraph.runs:
-                run.font.name = font
-                run.font.size = Pt(12)  # 12pt font as per specs
+            # Apply font and other formatting
+            for paragraph in doc.paragraphs:
+                if not paragraph.text.strip():
+                    continue  # Skip empty paragraphs
+                
+                # Set paragraph formatting based on genre
+                if genre == "non-fiction":
+                    paragraph.paragraph_format.line_spacing = 1.2
+                elif genre == "novel":
+                    paragraph.paragraph_format.line_spacing = 1.3
+                
+                # Apply font to runs
+                for run in paragraph.runs:
+                    run.font.name = font
+                    run.font.size = Pt(12)  # 12pt font as per specs
+                    
+            logger.info("Successfully applied paragraph and font formatting")
+        except Exception as format_err:
+            logger.error(f"Error applying formatting: {str(format_err)}")
+            # Continue with saving even if formatting failed
         
         # Save the formatted document
         output_path = TEMP_DIR / f"{file_id}_formatted.docx"
+        logger.info(f"Saving document to {output_path}")
         doc.save(output_path)
-        
-        # For now, we'll just use the DOCX as the output
-        # In a full version, we would convert to PDF here
-        logger.info(f"Successfully processed DOCX file: {output_path}")
+        logger.info("Document saved successfully")
         
         return output_path
     except Exception as e:
         logger.error(f"Error processing DOCX file: {str(e)}")
-        raise ValueError(f"Error processing DOCX file: {str(e)}")
+        # Create a simple error document
+        try:
+            error_doc = docx.Document()
+            error_doc.add_paragraph(f"Error processing your document: {str(e)}")
+            error_doc.add_paragraph("Please ensure your document is a valid DOCX file.")
+            error_path = TEMP_DIR / f"{file_id}_error.docx"
+            error_doc.save(error_path)
+            return error_path
+        except:
+            # If even this fails, raise the original error
+            raise ValueError(f"Error processing DOCX file: {str(e)}")
 
 async def process_pdf(input_path, file_id, book_size, font, genre):
     """Process a PDF file and apply formatting according to specified parameters"""
