@@ -106,10 +106,6 @@ class TestBookFormatter:
         except Exception as e:
             logger.error(f"❌ Failed - Error: {str(e)}")
             return False
-        if success and 'access_token' in response:
-            self.token = response['access_token']
-            return True
-        return False
 
     def test_get_subscription_tiers(self):
         """Test getting subscription tiers"""
