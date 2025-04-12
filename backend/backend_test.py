@@ -11,200 +11,124 @@ logger = logging.getLogger(__name__)
 # Get backend URL from environment
 BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', '')
 if not BACKEND_URL:
-    raise ValueError("BACKEND_URL environment variable not set")
+    raise ValueError("BACKEND_URL not set in environment")
 
 class TestBookFormatter:
     def __init__(self):
         self.base_url = BACKEND_URL
         self.token = None
-        self.user_email = f"test_user_{datetime.now().strftime('%H%M%S')}@test.com"
-        self.password = "TestPass123!"
-        self.tests_run = 0
-        self.tests_passed = 0
+        self.file_id = None
+        self.test_email = f"test_user_{datetime.now().strftime('%H%M%S')}@test.com"
+        self.test_password = "TestPass123!"
 
-    def run_test(self, name, method, endpoint, expected_status, data=None, files=None):
-        """Run a single API test"""
-        url = f"{self.base_url}/api/{endpoint}"
-        headers = {}
-        if self.token:
-            headers['Authorization'] = f'Bearer {self.token}'
-        
-        self.tests_run += 1
-        logger.info(f"\n🔍 Testing {name}...")
-        
-        try:
-            if method == 'GET':
-                response = requests.get(url, headers=headers)
-            elif method == 'POST':
-                if files:
-                    response = requests.post(url, headers=headers, data=data, files=files)
-                else:
-                    headers['Content-Type'] = 'application/json'
-                    response = requests.post(url, headers=headers, json=data)
-            elif method == 'PUT':
-                headers['Content-Type'] = 'application/json'
-                response = requests.put(url, headers=headers, json=data)
-
-            success = response.status_code == expected_status
-            if success:
-                self.tests_passed += 1
-                logger.info(f"✅ Passed - Status: {response.status_code}")
-                if response.text:
-                    try:
-                        logger.info(f"Response: {response.json()}")
-                    except:
-                        logger.info(f"Response: {response.text}")
-            else:
-                logger.error(f"❌ Failed - Expected {expected_status}, got {response.status_code}")
-                if response.text:
-                    logger.error(f"Error response: {response.text}")
-
-            return success, response.json() if success and response.text else {}
-
-        except Exception as e:
-            logger.error(f"❌ Failed - Error: {str(e)}")
-            return False, {}
-
-    def test_registration(self):
+    def test_register(self):
         """Test user registration"""
-        return self.run_test(
-            "User Registration",
-            "POST",
-            "register",
-            200,
-            data={"email": self.user_email, "password": self.password}
+        logger.info(f"Testing registration with email: {self.test_email}")
+        
+        response = requests.post(
+            f"{self.base_url}/api/register",
+            json={"email": self.test_email, "password": self.test_password}
         )
+        
+        assert response.status_code == 200, f"Registration failed: {response.text}"
+        logger.info("Registration successful")
 
     def test_login(self):
-        """Test login and get token"""
-        url = f"{self.base_url}/api/token"
-        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+        """Test user login and token retrieval"""
+        logger.info("Testing login")
+        
         data = {
-            'username': self.user_email,
-            'password': self.password
+            "username": self.test_email,
+            "password": self.test_password
         }
         
-        logger.info("\n🔍 Testing Login...")
-        try:
-            response = requests.post(url, data=data, headers=headers)
-            success = response.status_code == 200
-            
-            if success:
-                self.tests_passed += 1
-                logger.info(f"✅ Passed - Status: {response.status_code}")
-                response_data = response.json()
-                logger.info(f"Response: {response_data}")
-                if 'access_token' in response_data:
-                    self.token = response_data['access_token']
-                    return True
-            else:
-                logger.error(f"❌ Failed - Expected 200, got {response.status_code}")
-                if response.text:
-                    logger.error(f"Error response: {response.text}")
-            return False
-            
-        except Exception as e:
-            logger.error(f"❌ Failed - Error: {str(e)}")
-            return False
-
-    def test_get_subscription_tiers(self):
-        """Test getting subscription tiers"""
-        return self.run_test(
-            "Get Subscription Tiers",
-            "GET",
-            "subscription/tiers",
-            200
+        response = requests.post(
+            f"{self.base_url}/api/token",
+            data=data
         )
-
-    def test_get_genres(self):
-        """Test getting available genres"""
-        return self.run_test(
-            "Get Genres",
-            "GET",
-            "genres",
-            200
-        )
-
-    def test_get_formatting_standards(self):
-        """Test getting formatting standards"""
-        return self.run_test(
-            "Get Formatting Standards",
-            "GET",
-            "formatting/standards",
-            200
-        )
-
-    def test_get_usage(self):
-        """Test getting current usage"""
-        return self.run_test(
-            "Get Current Usage",
-            "GET",
-            "usage/current",
-            200
-        )
+        
+        assert response.status_code == 200, f"Login failed: {response.text}"
+        
+        data = response.json()
+        self.token = data["access_token"]
+        assert self.token, "No token received"
+        logger.info("Login successful, token received")
 
     def test_file_upload(self):
-        """Test file upload with a sample DOCX file"""
-        # Create a simple test DOCX file
-        test_file_path = "/tmp/test.docx"
+        """Test file upload functionality"""
+        logger.info("Testing file upload")
+        
+        # Create a simple test file
+        test_file_path = "test_book.docx"
         with open(test_file_path, "w") as f:
-            f.write("Test content")
+            f.write("Test book content")
 
-        files = {
-            'file': ('test.docx', open(test_file_path, 'rb'), 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
-        }
-        data = {
-            'book_size': '6x9',
-            'font': 'Times New Roman',
-            'genre': 'non_fiction'
-        }
+        try:
+            with open(test_file_path, "rb") as f:
+                files = {"file": ("test_book.docx", f)}
+                data = {
+                    "book_size": "6x9",
+                    "font": "Times New Roman",
+                    "genre": "non_fiction"
+                }
+                
+                headers = {"Authorization": f"Bearer {self.token}"}
+                
+                response = requests.post(
+                    f"{self.base_url}/api/upload",
+                    files=files,
+                    data=data,
+                    headers=headers
+                )
+                
+                assert response.status_code == 200, f"Upload failed: {response.text}"
+                
+                data = response.json()
+                self.file_id = data["file_id"]
+                assert self.file_id, "No file_id received"
+                logger.info(f"Upload successful, file_id: {self.file_id}")
 
-        return self.run_test(
-            "File Upload",
-            "POST",
-            "upload",
-            200,
-            data=data,
-            files=files
+        finally:
+            # Cleanup test file
+            if os.path.exists(test_file_path):
+                os.remove(test_file_path)
+
+    def test_download(self):
+        """Test file download functionality"""
+        logger.info("Testing file download")
+        
+        assert self.file_id, "No file_id available for download test"
+        
+        headers = {"Authorization": f"Bearer {self.token}"}
+        response = requests.get(
+            f"{self.base_url}/api/download/{self.file_id}",
+            headers=headers
         )
+        
+        assert response.status_code == 200, f"Download failed: {response.text}"
+        assert response.content, "No content received in download"
+        logger.info("Download successful")
 
 def main():
+    """Run all tests"""
     tester = TestBookFormatter()
     
-    # Test registration and login flow
-    logger.info("\n🔄 Testing Authentication Flow...")
-    if not tester.test_registration()[0]:
-        logger.error("❌ Registration failed, stopping tests")
+    try:
+        # Run tests in sequence
+        tester.test_register()
+        tester.test_login()
+        tester.test_file_upload()
+        tester.test_download()
+        
+        logger.info("All tests passed successfully!")
+        return 0
+        
+    except AssertionError as e:
+        logger.error(f"Test failed: {str(e)}")
         return 1
-    
-    if not tester.test_login():
-        logger.error("❌ Login failed, stopping tests")
+    except Exception as e:
+        logger.error(f"Unexpected error: {str(e)}")
         return 1
-    
-    # Test getting subscription tiers
-    logger.info("\n🔄 Testing Subscription and Genre Features...")
-    tester.test_get_subscription_tiers()
-    
-    # Test getting genres (requires auth)
-    tester.test_get_genres()
-    
-    # Test getting formatting standards
-    tester.test_get_formatting_standards()
-    
-    # Test getting usage data (requires auth)
-    tester.test_get_usage()
-    
-    # Test file upload (requires auth)
-    logger.info("\n🔄 Testing File Upload...")
-    tester.test_file_upload()
-    
-    # Print results
-    logger.info(f"\n📊 Tests Summary:")
-    logger.info(f"Total tests run: {tester.tests_run}")
-    logger.info(f"Tests passed: {tester.tests_passed}")
-    logger.info(f"Success rate: {(tester.tests_passed/tester.tests_run)*100:.2f}%")
-    
-    return 0 if tester.tests_passed == tester.tests_run else 1
 
 if __name__ == "__main__":
     exit(main())
