@@ -16,15 +16,21 @@ class TestBookFormatter(unittest.TestCase):
         # Create test files
         self.test_files = {}
         
-        # Create a simple DOCX file
-        with tempfile.NamedTemporaryFile(suffix='.docx', delete=False) as f:
-            f.write(b'PK\x03\x04\x14\x00\x00\x00\x08\x00')  # Basic DOCX header
-            self.test_files['docx'] = f.name
+        # Create a simple DOCX file using python-docx
+        from docx import Document
+        doc = Document()
+        doc.add_paragraph('Test document')
+        docx_path = os.path.join(tempfile.gettempdir(), 'test.docx')
+        doc.save(docx_path)
+        self.test_files['docx'] = docx_path
             
-        # Create a simple PDF file
-        with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as f:
-            f.write(b'%PDF-1.4\n')  # Basic PDF header
-            self.test_files['pdf'] = f.name
+        # Create a simple PDF file using reportlab
+        from reportlab.pdfgen import canvas
+        pdf_path = os.path.join(tempfile.gettempdir(), 'test.pdf')
+        c = canvas.Canvas(pdf_path)
+        c.drawString(100, 750, "Test PDF")
+        c.save()
+        self.test_files['pdf'] = pdf_path
 
     def tearDown(self):
         # Clean up test files
