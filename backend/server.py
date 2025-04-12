@@ -767,7 +767,7 @@ async def upload_file(
 async def process_docx(input_path, file_id, book_size, font, genre, template="standard"):
     """Process a DOCX file and apply formatting according to specified parameters"""
     try:
-        logger.info(f"Processing DOCX file: {input_path}, Size: {book_size}, Font: {font}, Genre: {genre}")
+        logger.info(f"Processing DOCX file: {input_path}, Size: {book_size}, Font: {font}, Genre: {genre}, Template: {template}")
         
         # Validate the DOCX file first - create a simple document if it's invalid
         try:
