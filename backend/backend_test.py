@@ -77,16 +77,35 @@ class TestBookFormatter:
 
     def test_login(self):
         """Test login and get token"""
-        # Login uses form data
-        form_data = f"username={self.user_email}&password={self.password}"
+        url = f"{self.base_url}/api/token"
         headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-        success, response = self.run_test(
-            "Login",
-            "POST",
-            "token",
-            200,
-            data=form_data
-        )
+        data = {
+            'username': self.user_email,
+            'password': self.password
+        }
+        
+        logger.info("\n🔍 Testing Login...")
+        try:
+            response = requests.post(url, data=data, headers=headers)
+            success = response.status_code == 200
+            
+            if success:
+                self.tests_passed += 1
+                logger.info(f"✅ Passed - Status: {response.status_code}")
+                response_data = response.json()
+                logger.info(f"Response: {response_data}")
+                if 'access_token' in response_data:
+                    self.token = response_data['access_token']
+                    return True
+            else:
+                logger.error(f"❌ Failed - Expected 200, got {response.status_code}")
+                if response.text:
+                    logger.error(f"Error response: {response.text}")
+            return False
+            
+        except Exception as e:
+            logger.error(f"❌ Failed - Error: {str(e)}")
+            return False
         if success and 'access_token' in response:
             self.token = response['access_token']
             return True
