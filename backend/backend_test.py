@@ -9,7 +9,10 @@ BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', '')
 
 class TestBookFormatter(unittest.TestCase):
     def setUp(self):
-        self.base_url = f"{BACKEND_URL}/api"
+        if not BACKEND_URL:
+            raise ValueError("REACT_APP_BACKEND_URL environment variable is not set")
+        self.base_url = BACKEND_URL
+        print(f"Using backend URL: {self.base_url}")
         # Create test files
         self.test_files = {}
         
