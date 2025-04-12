@@ -108,7 +108,8 @@ class TestBookFormatter(unittest.TestCase):
                 'font': 'Times New Roman',
                 'genre': 'novel'
             }
-            upload_response = requests.post(f"{self.base_url}/upload", files=files, data=data)
+            upload_response = requests.post(f"{self.base_url}/api/upload", files=files, data=data)
+            print(f"Download test upload response: {upload_response.text}")
             file_id = upload_response.json()['file_id']
 
             # Test status endpoint
