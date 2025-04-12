@@ -70,7 +70,7 @@ class BookFormatAITester:
             "POST",
             "token",
             200,
-            data={"username": self.test_user, "password": self.test_password}
+            data={"grant_type": "password", "username": self.test_user, "password": self.test_password}
         )
         if success and 'access_token' in response:
             self.token = response['access_token']
