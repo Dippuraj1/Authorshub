@@ -6,7 +6,7 @@ from datetime import datetime
 class BookFormatAITester:
     def __init__(self):
         # Get backend URL from frontend .env
-        self.base_url = "https://bookformatai.onrender.com/api"  # Using public endpoint
+        self.base_url = "https://3f99b569-43a1-4409-b75b-97e6a1d67a11.preview.emergentagent.com/api"  # Using public endpoint
         self.token = None
         self.test_user = f"test_user_{datetime.now().strftime('%H%M%S')}@test.com"
         self.test_password = "TestPass123!"
