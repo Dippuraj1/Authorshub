@@ -95,7 +95,8 @@ class TestBookFormatter(unittest.TestCase):
                 'font': 'Times New Roman',
                 'genre': 'novel'
             }
-            response = requests.post(f"{self.base_url}/upload", files=files, data=data)
+            response = requests.post(f"{self.base_url}/api/upload", files=files, data=data)
+            print(f"Invalid file type response: {response.text}")
             self.assertEqual(response.status_code, 400)
 
     def test_download_and_status(self):
