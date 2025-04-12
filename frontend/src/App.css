@@ -663,6 +663,25 @@ body {
   margin-top: auto;
 }
 
+.purchase-button {
+  width: 100%;
+  padding: 12px;
+  background-color: var(--accent-color);
+  color: var(--text-color);
+  border: none;
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  margin-top: 1rem;
+}
+
+.purchase-button:hover {
+  background-color: #d9a55a;
+  transform: translateY(-2px);
+}
+
 /* History table */
 .history-table-container {
   overflow-x: auto;
