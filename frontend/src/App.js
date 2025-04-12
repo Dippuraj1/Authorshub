@@ -580,7 +580,8 @@ function App() {
               </div>
               <button className="pricing-button"
                 onClick={() => {
-                  alert("Payment integration will be added once you provide the API keys for Razorpay/Stripe.");
+                  setPendingSubscription('business');
+                  setShowPaymentPage(true);
                 }}
               >
                 Subscribe Now
