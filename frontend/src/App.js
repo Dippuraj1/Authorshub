@@ -901,6 +901,25 @@ function App() {
                 </div>
               )}
             </div>
+            
+            <div className="form-group">
+              <label htmlFor="template">Template:</label>
+              <select 
+                id="template" 
+                value={template} 
+                onChange={(e) => setTemplate(e.target.value)}
+                className="form-select"
+              >
+                <option value="standard">Standard Template</option>
+                <option value="academic">Academic Template</option>
+                <option value="modern">Modern Clean Template</option>
+                <option value="classic">Classic Literary Template</option>
+                <option value="minimalist">Minimalist Template</option>
+              </select>
+              <div className="form-help">
+                Choose a pre-defined template to speed up your formatting process.
+              </div>
+            </div>
           </div>
           
           <button 
